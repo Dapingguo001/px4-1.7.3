@@ -142,6 +142,10 @@ then
 	# FMUv5 may have both PWM I2C RGB LED support
 	rgbled_pwm start
 
+    if rstcan start
+    then
+        set CAN_MAVLINK_PORT /dev/rstcan_4g_trans
+    fi
 	#
 	# Set AUTOCNF flag to use it in AUTOSTART scripts
 	#
@@ -553,7 +557,11 @@ then
 		then
 			set MAVLINK_F "-r 1200 -d /dev/ttyS1"
 			# Start MAVLink on Wifi (ESP8266 port)
+            echo "mavlink ttyS0 start"
 			mavlink start -r 20000 -b 921600 -d /dev/ttyS0
+
+            echo "mavlink MAVLINK_F = ${CAN_MAVLINK_PORT} start"
+            mavlink start -r 2000 -d ${CAN_MAVLINK_PORT}
 		fi
 
 		if ver hwcmp AEROFC_V1
@@ -571,6 +579,7 @@ then
 	if [ "x$MAVLINK_F" == xnone ]
 	then
 	else
+        echo "mavlink MAVLINK_F = ${MAVLINK_F} start"
 		mavlink start ${MAVLINK_F}
 	fi
 	unset MAVLINK_F

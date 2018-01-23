@@ -43,6 +43,8 @@ set(config_module_list
 	drivers/px4flow
 	drivers/px4fmu
 	drivers/rgbled
+    #robsense
+	drivers/rstcan
 	drivers/sdp3x_airspeed
 	drivers/sf0x
 	drivers/sf1xx
