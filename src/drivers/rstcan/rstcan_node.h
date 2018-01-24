@@ -149,4 +149,19 @@ public:
     virtual void test();
 };
 
+class RSTCan_Node_Radar: public RSTCan_Node
+{
+private:
+    orb_advert_t _advert_pub;
+protected:
+    virtual int32_t _task();
+public:
+    RSTCan_Node_Radar(const char *name, const char *path, void *_master_node, void *_slave_node);
+    virtual ~RSTCan_Node_Radar();
+    virtual int	init();
+
+	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
+    virtual void test();
+};
+
 

@@ -158,6 +158,9 @@ int32_t RSTCan_Manager::_alloc_slave_id()
             case RSTCAN_NODE_CAMERA:
                 tmp = new RSTCan_Node_Camera("can_camera0", "/dev/rstcan_cam", master_node, slave_node);
                 break;
+            case RSTCAN_NODE_RADAR:
+                tmp = new RSTCan_Node_Radar("can_radar0", "/dev/rstcan_radar", master_node, slave_node);
+                break;
             default:
                 printf("no such node type:%d\n", node_type);
         }

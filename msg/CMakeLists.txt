@@ -122,6 +122,7 @@ set(msg_files
 	vtol_vehicle_status.msg
 	wind_estimate.msg
     rstcan_camera.msg
+    rstcan_radar.msg
 	)
 
 px4_add_git_submodule(TARGET git_gencpp PATH tools/gencpp)

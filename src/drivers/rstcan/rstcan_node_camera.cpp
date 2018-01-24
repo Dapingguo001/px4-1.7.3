@@ -145,12 +145,12 @@ void RSTCan_Node_Camera::test()
     test_pub = orb_advertise(ORB_ID(rstcan_camera), &orb_msg);
     ::printf("advertise success\n");
 
+#if 0
     orb_msg.cmd = rstcan_camera_s::RST_CAMERA_SNAPSHOT;
 
     memset(orb_msg.data, 0, sizeof(orb_msg.data));
     orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
 
-#if 0
     static bool record = true;
     if(record)
     {
@@ -172,20 +172,28 @@ void RSTCan_Node_Camera::test()
     orb_msg.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_STOP;
     memset(orb_msg.data, 0, sizeof(orb_msg.data));
     orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
-    while(1)
-    {
-    ptz_ctrl_t ptz;
-    ptz.roll = 0.0f;
-    ptz.pitch = 0.0f;
-    ptz.yaw = 50.0f;
-
-        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-        memcpy(orb_msg.data, &ptz, sizeof(ptz));
-        orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
-
-        usleep(200000);
-    }
 #endif
+    static bool stop = false;
+    ptz_ctrl_t ptz;
 
+    if(stop == false)
+    {
+        ptz.roll = 0.0f;
+        ptz.pitch = 0.0f;
+        ptz.yaw = 1.0f;
+
+        stop = true;
+    }
+    else
+    {
+        ptz.roll = 0.0f;
+        ptz.pitch = 0.0f;
+        ptz.yaw = 0.0;
+        stop = false;
+    }
+
+    orb_msg.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
+    memcpy(orb_msg.data, &ptz, sizeof(ptz));
+    orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
 
 }

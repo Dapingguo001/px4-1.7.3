@@ -35,6 +35,7 @@ typedef enum{
     RSTCAN_NODE_4G_TRANS,
     RSTCAN_NODE_RGBLED,
     RSTCAN_NODE_CAMERA,
+    RSTCAN_NODE_RADAR,
     RSTCAN_NODE_GPS,
     RSTCAN_NODE_BARO,
     RSTCAN_NODE_MAG,
@@ -105,7 +106,7 @@ enum RGBLED_NOR_SUB_MSG{
 };
 
 #define TRANS_LEN(p)    (sizeof(uint32_t) + p)
-//传输的时候data不一定时64，有多少传多少
+//传输的时候data不一定是64，有多少传多少
 #pragma pack(push, 1)
 typedef struct camera_can_payload {
     uint32_t data_len;
@@ -121,11 +122,14 @@ enum CAMERA_NOR_SUB_MSG {
     CAMERA_ZOOM_OUT_SUB_MSG,                       //缩小
     CAMERA_ZOOM_STOP_SUB_MSG,                      //停止缩放
     CAMERA_SNAPSHOT_SUB_MSG,
-    CAMERA_RECORD_START_SUB_MSG,
-    CAMERA_RECORD_STOP_SUB_MSG,
-    CAMERA_PTZ_CTRL_SUB_MSG,
+    CAMERA_RECORD_START_SUB_MSG, //14
+    CAMERA_RECORD_STOP_SUB_MSG,  //15
+    CAMERA_PTZ_CTRL_SUB_MSG, //16
     CAMERA_FOCUS_SUB_MSG,
     CAMERA_SUB_MSG_NR,
 };
 
+enum RADAR_SVC_SUB_MSG {
+    RADAR_GET_DATA_SUB_MSG = CUSTOM_SUB_MSG_BASE,
+};
 

@@ -34,4 +34,17 @@ typedef struct ptz_ctrl {
 }ptz_ctrl_t;
 
 
+//XXX 必须和dev manager中的相同！！
+#define DATA_MASK_DISTANCE  (1)
+#define DATA_MASK_SPEED     (1<<1)
+
+#pragma pack(push, 1)
+typedef struct radar_data {
+    uint32_t data_mask;   //告知使用者该雷达有哪些有效数据
+    uint16_t distance;    // mm
+    uint32_t speed;       // cm/s
+}radar_data_t;
+#pragma pack(pop)
+
+
 
