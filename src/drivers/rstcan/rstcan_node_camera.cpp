@@ -4,7 +4,7 @@
  *Author:      HeBin
  *Version:     0.1
  *Date:        2018-01-15 11:23:52
- *Last Modify: 2018-01-15 11:23:55
+ *Last Modify: 2018-01-26 15:39:39
  *Description: 
 **********************************************************************************/
 
@@ -135,65 +135,92 @@ int	RSTCan_Node_Camera::ioctl(struct file *filp, int cmd, unsigned long arg)
     return 0;
 }
 
-void RSTCan_Node_Camera::test()
+void RSTCan_Node_Camera::test(char *arg)
 {
     orb_advert_t test_pub;
     struct rstcan_camera_s orb_msg = {0};
 
-    ::printf("camera test\n");
+    ::printf("camera test, you can indicate these test items: ptz/record/snap/zoomin/zoomout/zoomstop\n");
+
+    if(arg == nullptr)
+        return;
 
     test_pub = orb_advertise(ORB_ID(rstcan_camera), &orb_msg);
     ::printf("advertise success\n");
 
-#if 0
-    orb_msg.cmd = rstcan_camera_s::RST_CAMERA_SNAPSHOT;
-
-    memset(orb_msg.data, 0, sizeof(orb_msg.data));
-    orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
-
-    static bool record = true;
-    if(record)
+    if(strcmp(arg, "ptz") == 0)
     {
-        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_RECORD_START;
-        record = false;
+        static bool stop = false;
+        static bool orentation = false;
+        ptz_ctrl_t ptz;
+
+        if(stop == false)
+        {
+            ptz.roll = 0.0f;
+            ptz.pitch = 0.0f;
+            if(orentation)
+            {
+                ptz.yaw = 1.0f;
+                orentation = false;
+            }
+            else
+            {
+                ptz.yaw = -1.0f;
+                orentation = true;
+            }
+
+            stop = true;
+        }
+        else
+        {
+            ptz.roll = 0.0f;
+            ptz.pitch = 0.0f;
+            ptz.yaw = 0.0;
+            stop = false;
+        }
+
+        ::printf("roll=%f pitch=%f yaw=%f\n", (double)ptz.roll, (double)ptz.pitch, (double)ptz.yaw);
+
+        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
+        memcpy(orb_msg.data, &ptz, sizeof(ptz));
+       
     }
-    else
+    else if(strcmp(arg, "record") == 0)
     {
-        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_RECORD_STOP;
-        record = true;
+        static bool record = true;
+        if(record)
+        {
+            orb_msg.cmd = rstcan_camera_s::RST_CAMERA_RECORD_START;
+            record = false;
+        }
+        else
+        {
+            orb_msg.cmd = rstcan_camera_s::RST_CAMERA_RECORD_STOP;
+            record = true;
+        }
+        memset(orb_msg.data, 0, sizeof(orb_msg.data));
     }
-    memset(orb_msg.data, 0, sizeof(orb_msg.data));
-    orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
-
-#endif
-#if 0
-    usleep(500000);
-
-    orb_msg.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_STOP;
-    memset(orb_msg.data, 0, sizeof(orb_msg.data));
-    orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
-#endif
-    static bool stop = false;
-    ptz_ctrl_t ptz;
-
-    if(stop == false)
+    else if(strcmp(arg, "snap") == 0)
     {
-        ptz.roll = 0.0f;
-        ptz.pitch = 0.0f;
-        ptz.yaw = 1.0f;
-
-        stop = true;
+        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_SNAPSHOT;
+        memset(orb_msg.data, 0, sizeof(orb_msg.data));
     }
-    else
+    else if(strcmp(arg, "zoomin") == 0)
     {
-        ptz.roll = 0.0f;
-        ptz.pitch = 0.0f;
-        ptz.yaw = 0.0;
-        stop = false;
+        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_IN;
+        memset(orb_msg.data, 0, sizeof(orb_msg.data));
+    }
+    else if(strcmp(arg, "zoomout") == 0)
+    {
+        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_OUT;
+        memset(orb_msg.data, 0, sizeof(orb_msg.data));
+    }
+    else if(strcmp(arg, "zoomstop") == 0)
+    {
+        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_STOP;
+        memset(orb_msg.data, 0, sizeof(orb_msg.data));
     }
 
-    orb_msg.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-    memcpy(orb_msg.data, &ptz, sizeof(ptz));
     orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
 
 }

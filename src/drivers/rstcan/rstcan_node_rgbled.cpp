@@ -98,7 +98,7 @@ int RSTCan_Node_RgbLed::ioctl(device::file_t *filp, int cmd, unsigned long arg)
 	return ret;
 }
 
-void RSTCan_Node_RgbLed::test()
+void RSTCan_Node_RgbLed::test(char *arg)
 {
 #if 0
     int32_t ret = 0;

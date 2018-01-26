@@ -4,7 +4,7 @@
  *Author:      HeBin
  *Version:     0.1
  *Date:        2017-11-21 19:08:30
- *Last Modify: 2017-11-21 19:08:30
+ *Last Modify: 2018-01-26 15:39:39
  *Description: 
 **********************************************************************************/
 
@@ -133,7 +133,7 @@ int RSTCan_Node_4G_CTRL::ioctl(device::file_t *filp, int cmd, unsigned long arg)
     return ret;
 }
 
-void RSTCan_Node_4G_CTRL::test()
+void RSTCan_Node_4G_CTRL::test(char *arg)
 {
 #if 0 
     int32_t ret = 0;

@@ -4,7 +4,7 @@
  *Author:      HeBin
  *Version:     0.1
  *Date:        2018-01-15 11:23:52
- *Last Modify: 2018-01-24 16:12:30
+ *Last Modify: 2018-01-26 15:39:39
  *Description: 
 **********************************************************************************/
 
@@ -84,7 +84,7 @@ int	RSTCan_Node_Radar::ioctl(struct file *filp, int cmd, unsigned long arg)
     return 0;
 }
 
-void RSTCan_Node_Radar::test()
+void RSTCan_Node_Radar::test(char *arg)
 {
     int32_t count = 0;
     bool update = true;

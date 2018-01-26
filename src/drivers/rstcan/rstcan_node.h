@@ -73,7 +73,7 @@ public:
 	virtual void	poll_notify(pollevent_t events);
 
     virtual void print_data();
-    virtual void test();
+    virtual void test(char *arg);
 
     void node_task_start(int32_t interval, void *arg);
     void node_task_stop();
@@ -116,7 +116,7 @@ public:
 
 	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
 //    virtual void print_data();
-    virtual void test();
+    virtual void test(char *arg);
 
     int32_t _wait_ack(uint8_t *buf, uint32_t len);
 //private:
@@ -131,7 +131,7 @@ public:
     virtual int		init();
 
 	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
-    virtual void test();
+    virtual void test(char *arg);
 };
 
 class RSTCan_Node_Camera: public RSTCan_Node
@@ -146,7 +146,7 @@ public:
     virtual int	init();
 
 	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
-    virtual void test();
+    virtual void test(char *arg);
 };
 
 class RSTCan_Node_Radar: public RSTCan_Node
@@ -161,7 +161,7 @@ public:
     virtual int	init();
 
 	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
-    virtual void test();
+    virtual void test(char *arg);
 };
 
 

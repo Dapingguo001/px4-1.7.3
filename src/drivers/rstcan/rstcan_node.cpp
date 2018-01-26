@@ -109,7 +109,7 @@ void RSTCan_Node::print_data()
 {
 }
 
-void RSTCan_Node::test()
+void RSTCan_Node::test(char *arg)
 {
 
 }

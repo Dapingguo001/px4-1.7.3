@@ -245,7 +245,7 @@ namespace rstcan
 {
 
 void start();
-void test(char *node_name);
+void test(char *node_name, char *arg);
 void info(char *node_name);
 void usage();
 
@@ -338,7 +338,7 @@ void info(char *node_name)
 	exit(0);
 }
 
-void test(char *node_name)
+void test(char *node_name, char *arg)
 {
     if(node_name == NULL)
     {
@@ -362,7 +362,7 @@ void test(char *node_name)
             
                 if(strcmp(node_name, p_node->get_node_name()) == 0)
                 {
-                    p_node->test();
+                    p_node->test(arg);
                 }
             }
         }
@@ -372,7 +372,7 @@ void test(char *node_name)
 
 void usage()
 {
-    printf("rstcan start/info [node name]/test [node name]\n");
+    printf("rstcan start/info [node name]/test [node name] [arg]\n");
     exit(0);
 }
 
@@ -382,6 +382,7 @@ int rstcan_main(int argc, char *argv[])
 {
 	int ch;
     char *node_name = NULL;
+    char *arg = NULL;
 	/* jump over start/off/etc and look at options first */
 	while ((ch = getopt(argc, argv, "XR:")) != EOF) {
 		switch (ch) {
@@ -410,8 +411,11 @@ int rstcan_main(int argc, char *argv[])
     
         if(argc > 2)
             node_name = argv[optind+1];
+        
+        if(argc > 3)
+            arg = argv[optind+2];
 
-		rstcan::test(node_name);
+		rstcan::test(node_name, arg);
     }
     /*
 	 * Print driver information.
