@@ -49,10 +49,8 @@ int32_t RSTCan_Node_Radar::_task()
     rstcan_msg_t msg;
     radar_data_t data = {0};//can总线传来的数据
     struct rstcan_radar_s orb_msg = {0};//通过orb给应用的数据
+    int instance = _node_idx;
 
-    _advert_pub = orb_advertise(ORB_ID(rstcan_radar), &orb_msg);
-    ::printf("advertise success\n");
-    
     while(1)
     {
         RSTCAN_SVC_MSG_CONSTRUCTOR(msg, RADAR_GET_DATA_SUB_MSG, (uint8_t *)&data, sizeof(data));
@@ -64,7 +62,7 @@ int32_t RSTCan_Node_Radar::_task()
             orb_msg.data_mask = data.data_mask;
             orb_msg.distance = data.distance;    // mm
             orb_msg.speed = data.speed;          // cm/s
-            orb_publish(ORB_ID(rstcan_radar), _advert_pub, &orb_msg);
+            orb_publish_auto(ORB_ID(rstcan_radar), &_advert_pub, &orb_msg, &instance, ORB_PRIO_DEFAULT);
             continue;
         }
         //如果还在组包，不要休眠,尽快收完一包

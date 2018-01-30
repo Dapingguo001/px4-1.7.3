@@ -46,5 +46,18 @@ typedef struct radar_data {
 }radar_data_t;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+typedef struct battery_info{
+    uint16_t batt_num;       //电池组中有多少个电池
+    uint32_t capacity;       //电池容量，单位mAh
+    uint32_t total_vol;      //电池组总电压, 单位mV
+    uint32_t curr;           //充放电电流，正数充电，负数放电, 单位mA
+    uint16_t temp;           //电池温度，单位0.1度
+    uint8_t  charge_stat;    //充电状态，单位%
+    uint16_t cycle_count;    //电池循环计数
+    uint8_t  healthy;        //健康状况，单位%
+}batt_info_t;
+#pragma pack(pop)
+
 
 
