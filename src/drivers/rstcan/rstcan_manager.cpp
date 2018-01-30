@@ -4,7 +4,7 @@
  *Author:      HeBin
  *Version:     0.1
  *Date:        2017-11-10 10:28:31
- *Last Modify: 2017-11-10 10:28:31
+ *Last Modify: 2018-01-30 17:17:05
  *Description: 
 **********************************************************************************/
 
@@ -137,29 +137,38 @@ int32_t RSTCan_Manager::_alloc_slave_id()
         uint8_t node_type = rstcan_get_node_type(slave_node);
         uint8_t node_idx = rstcan_get_node_idx(slave_node);
         class RSTCan_Node *tmp = nullptr;
+        char path[64];
         // XXX 如果有多个相同节点,在dev路径后面加上node_idx作为区分
+        memset(path, 0, sizeof(path));
         switch(node_type)
         {
             case RSTCAN_NODE_4G_CONTROL:
-                tmp = new RSTCan_Node_4G_CTRL("can_4g_ctrl0", "/dev/rstcan_4g_ctrl", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_4g_ctrl%d", node_idx);
+                tmp = new RSTCan_Node_4G_CTRL("can_4g_ctrl", path, master_node, slave_node, node_idx);
                 break;
             case RSTCAN_NODE_USB:
-                tmp = new RSTCan_Node_Bypass("can_usb0", "/dev/rstcan_usb", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_usb%d", node_idx);
+                tmp = new RSTCan_Node_Bypass("can_usb", path, master_node, slave_node, node_idx);
                 break;
             case RSTCAN_NODE_4G_TRANS:
-                tmp = new RSTCan_Node_Bypass("can_4g_trans0", "/dev/rstcan_4g_trans", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_4g_trans%d", node_idx);
+                tmp = new RSTCan_Node_Bypass("can_4g_trans", path, master_node, slave_node, node_idx);
                 break;
             case RSTCAN_NODE_RGBLED:
-                tmp = new RSTCan_Node_RgbLed("can_rgbled0", "/dev/rstcan_rgbled", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_rgbled%d", node_idx);
+                tmp = new RSTCan_Node_RgbLed("can_rgbled", path, master_node, slave_node, node_idx);
                 break;
             case RSTCAN_NODE_GPS:
-                tmp = new RSTCan_Node_Bypass("can_gps0", "/dev/rstcan_gps", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_gps%d", node_idx);
+                tmp = new RSTCan_Node_Bypass("can_gps", path, master_node, slave_node, node_idx);
                 break;
             case RSTCAN_NODE_CAMERA:
-                tmp = new RSTCan_Node_Camera("can_camera0", "/dev/rstcan_cam", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_cam%d", node_idx);
+                tmp = new RSTCan_Node_Camera("can_camera", path, master_node, slave_node, node_idx);
                 break;
             case RSTCAN_NODE_RADAR:
-                tmp = new RSTCan_Node_Radar("can_radar0", "/dev/rstcan_radar", master_node, slave_node);
+                snprintf(path, sizeof(path), "/dev/rstcan_radar%d", node_idx);
+                tmp = new RSTCan_Node_Radar("can_radar", path, master_node, slave_node, node_idx);
                 break;
             default:
                 printf("no such node type:%d\n", node_type);
@@ -322,7 +331,7 @@ void info(char *node_name)
                 if(node_name == NULL)
                 {
                     /*print some error status*/
-                    printf(" |-> %s:\n", p_node->get_node_name()); 
+                    printf(" |-> %s%d:\n", p_node->get_node_name(), p_node->get_node_idx()); 
                 }
                 else if(strcmp(node_name, p_node->get_node_name()) == 0)
                 {
@@ -340,6 +349,8 @@ void info(char *node_name)
 
 void test(char *node_name, char *arg)
 {
+    char path[64] = {0};
+
     if(node_name == NULL)
     {
         printf("please indicate node name\n");
@@ -360,7 +371,8 @@ void test(char *node_name, char *arg)
                 if(p_node == nullptr)
                     continue;
             
-                if(strcmp(node_name, p_node->get_node_name()) == 0)
+                snprintf(path, sizeof(path), "%s%d", p_node->get_node_name(), p_node->get_node_idx());
+                if(strcmp(node_name, path) == 0)
                 {
                     p_node->test(arg);
                 }

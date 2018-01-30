@@ -11,8 +11,8 @@
 #include "rstcan_master.h"
 #include "rstcan_manager.h"
 
-RSTCan_Node_RgbLed::RSTCan_Node_RgbLed(const char *name, const char *path, void *_master_node, void *_slave_node):
-    RSTCan_Node(name, path, _master_node, _slave_node)
+RSTCan_Node_RgbLed::RSTCan_Node_RgbLed(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx):
+    RSTCan_Node(name, path, _master_node, _slave_node, idx)
 {
 
 }

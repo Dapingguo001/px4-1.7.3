@@ -13,8 +13,8 @@
 #include <drivers/drv_rstcan.h>
 #include <uORB/topics/rstcan_radar.h>
 
-RSTCan_Node_Radar::RSTCan_Node_Radar(const char *name, const char *path, void *_master_node, void *_slave_node):
-    RSTCan_Node(name, path, _master_node, _slave_node),
+RSTCan_Node_Radar::RSTCan_Node_Radar(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx):
+    RSTCan_Node(name, path, _master_node, _slave_node, idx),
     _advert_pub(nullptr)
 {
 

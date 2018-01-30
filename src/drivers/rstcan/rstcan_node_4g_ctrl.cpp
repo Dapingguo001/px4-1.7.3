@@ -4,7 +4,7 @@
  *Author:      HeBin
  *Version:     0.1
  *Date:        2017-11-21 19:08:30
- *Last Modify: 2018-01-26 15:39:39
+ *Last Modify: 2018-01-30 17:17:05
  *Description: 
 **********************************************************************************/
 
@@ -14,8 +14,8 @@
 
 #define WAIT_ACK_TIMOUT_US  3000000   
 
-RSTCan_Node_4G_CTRL::RSTCan_Node_4G_CTRL(const char *name, const char *path, void *_master_node, void *_slave_node):
-    RSTCan_Node(name, path, _master_node, _slave_node)
+RSTCan_Node_4G_CTRL::RSTCan_Node_4G_CTRL(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx):
+    RSTCan_Node(name, path, _master_node, _slave_node, idx)
 {
 
 }

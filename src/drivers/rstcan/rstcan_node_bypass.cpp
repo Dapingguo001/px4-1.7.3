@@ -4,15 +4,15 @@
  *Author:      HeBin
  *Version:     0.1
  *Date:        2017-11-10 13:53:27
- *Last Modify: 2017-11-10 13:53:27
+ *Last Modify: 2018-01-30 17:17:05
  *Description: 
 **********************************************************************************/
 
 #include "rstcan_master.h"
 #include "rstcan_manager.h"
 
-RSTCan_Node_Bypass::RSTCan_Node_Bypass(const char *name, const char *path, void *_master_node, void *_slave_node):
-    RSTCan_Node(name, path, _master_node, _slave_node)
+RSTCan_Node_Bypass::RSTCan_Node_Bypass(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx):
+    RSTCan_Node(name, path, _master_node, _slave_node, idx)
 {
 
 }

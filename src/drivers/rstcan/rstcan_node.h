@@ -53,6 +53,7 @@ class RSTCan_Node : public device::CDev
 {
 protected:
     void *master_node;
+    uint8_t _node_idx;
 
     virtual int32_t _task();
 private:
@@ -64,7 +65,7 @@ private:
 public:
     void *slave_node;
 
-    RSTCan_Node(const char *name, const char *path, void *_master_node, void *_slave_node);
+    RSTCan_Node(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
     virtual ~RSTCan_Node();
 	virtual int		init();
 	virtual int	    ioctl(struct file *filp, int cmd, unsigned long arg);
@@ -78,12 +79,13 @@ public:
     void node_task_start(int32_t interval, void *arg);
     void node_task_stop();
     char *get_node_name(){return (char *)_name;}
+    uint8_t get_node_idx(){return _node_idx;}
 };
 
 class RSTCan_Node_Bypass : public RSTCan_Node
 {
 public:
-    RSTCan_Node_Bypass(const char *name, const char *path, void *_master_node, void *_slave_node);
+    RSTCan_Node_Bypass(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
     virtual ~RSTCan_Node_Bypass();
 	virtual int		init();
 	virtual int	    ioctl(struct file *filp, int cmd, unsigned long arg);
@@ -110,7 +112,7 @@ struct radio_4g_status{
 class RSTCan_Node_4G_CTRL : public RSTCan_Node
 {
 public:
-    RSTCan_Node_4G_CTRL(const char *name, const char *path, void *_master_node, void *_slave_node);
+    RSTCan_Node_4G_CTRL(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
     virtual ~RSTCan_Node_4G_CTRL();
 	virtual int		init();
 
@@ -119,19 +121,19 @@ public:
     virtual void test(char *arg);
 
     int32_t _wait_ack(uint8_t *buf, uint32_t len);
-//private:
-    int _class_instance;
+private:
 };
 
 class RSTCan_Node_RgbLed: public RSTCan_Node
 {
 public:
-    RSTCan_Node_RgbLed(const char *name, const char *path, void *_master_node, void *_slave_node);
+    RSTCan_Node_RgbLed(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
     virtual ~RSTCan_Node_RgbLed();
     virtual int		init();
 
 	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
     virtual void test(char *arg);
+private:
 };
 
 class RSTCan_Node_Camera: public RSTCan_Node
@@ -141,12 +143,13 @@ private:
 protected:
     virtual int32_t _task();
 public:
-    RSTCan_Node_Camera(const char *name, const char *path, void *_master_node, void *_slave_node);
+    RSTCan_Node_Camera(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
     virtual ~RSTCan_Node_Camera();
     virtual int	init();
 
 	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
     virtual void test(char *arg);
+private:
 };
 
 class RSTCan_Node_Radar: public RSTCan_Node
@@ -156,7 +159,7 @@ private:
 protected:
     virtual int32_t _task();
 public:
-    RSTCan_Node_Radar(const char *name, const char *path, void *_master_node, void *_slave_node);
+    RSTCan_Node_Radar(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
     virtual ~RSTCan_Node_Radar();
     virtual int	init();
 

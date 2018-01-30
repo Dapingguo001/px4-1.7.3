@@ -13,9 +13,10 @@
 
 static RSTCan_Node *instance = nullptr;
 
-RSTCan_Node::RSTCan_Node(const char *name, const char *path, void *_master_node, void *_slave_node):
+RSTCan_Node::RSTCan_Node(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx):
     CDev(name, path),
     master_node(_master_node),
+    _node_idx(idx),
     _call{},
     _task_fd(0),
     slave_node(_slave_node)

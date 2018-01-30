@@ -13,8 +13,8 @@
 #include <drivers/drv_rstcan.h>
 #include <uORB/topics/rstcan_camera.h>
 
-RSTCan_Node_Camera::RSTCan_Node_Camera(const char *name, const char *path, void *_master_node, void *_slave_node):
-    RSTCan_Node(name, path, _master_node, _slave_node),
+RSTCan_Node_Camera::RSTCan_Node_Camera(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx):
+    RSTCan_Node(name, path, _master_node, _slave_node, idx),
     _orb_sub_fd(0)
 {
 
@@ -52,8 +52,9 @@ int32_t RSTCan_Node_Camera::_task()
     uint8_t sub_type = 0;
     rstcan_msg_t msg;
     ptz_ctrl_t *ptz;
+    int instance = _node_idx;
 
-    _orb_sub_fd = orb_subscribe(ORB_ID(rstcan_camera));
+    _orb_sub_fd = orb_subscribe_multi(ORB_ID(rstcan_camera), instance);
 
     while(1)
     {
@@ -139,13 +140,14 @@ void RSTCan_Node_Camera::test(char *arg)
 {
     orb_advert_t test_pub;
     struct rstcan_camera_s orb_msg = {0};
+    int instance = _node_idx;
 
     ::printf("camera test, you can indicate these test items: ptz/record/snap/zoomin/zoomout/zoomstop\n");
 
     if(arg == nullptr)
         return;
 
-    test_pub = orb_advertise(ORB_ID(rstcan_camera), &orb_msg);
+    test_pub = orb_advertise_multi(ORB_ID(rstcan_camera), &orb_msg, &instance, ORB_PRIO_DEFAULT);
     ::printf("advertise success\n");
 
     if(strcmp(arg, "ptz") == 0)
