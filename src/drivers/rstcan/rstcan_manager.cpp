@@ -170,6 +170,10 @@ int32_t RSTCan_Manager::_alloc_slave_id()
                 snprintf(path, sizeof(path), "/dev/rstcan_radar%d", node_idx);
                 tmp = new RSTCan_Node_Radar("can_radar", path, master_node, slave_node, node_idx);
                 break;
+            case RSTCAN_NODE_LANDING_GEAR:
+                snprintf(path, sizeof(path), "/dev/rstcan_lg%d", node_idx);
+                tmp = new RSTCan_Node_LandingGear("can_landing_gear", path, master_node, slave_node, node_idx);
+                break;
             default:
                 printf("no such node type:%d\n", node_type);
         }

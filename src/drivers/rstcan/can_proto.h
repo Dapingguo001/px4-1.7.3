@@ -30,6 +30,7 @@ typedef enum{
     RSTCAN_NODE_SLAVE_103, //所有接在can口上的子节点，bootloader升级程序是用作广播id
 
     //for app, 加节点类型需慎重, 和can优先级密切相关, 根据优先级来确定枚举的位置, 不可随便加
+    RSTCAN_NODE_LANDING_GEAR,
     RSTCAN_NODE_4G_CONTROL ,
     RSTCAN_NODE_USB,
     RSTCAN_NODE_4G_TRANS,
@@ -136,5 +137,11 @@ enum RADAR_SVC_SUB_MSG {
 
 enum BATTERY_SVC_SUB_MSG {
     BATTERY_GET_INFO_SUB_MSG = CUSTOM_SUB_MSG_BASE,
+};
+
+enum LANDING_GAER_NOR_SUB_MSG {
+    LANDING_GAER_UP_SUB_MSG = CUSTOM_SUB_MSG_BASE, 
+    LANDING_GAER_DOWN_SUB_MSG,
+    LANDING_GAER_STOP_SUB_MSG,
 };
 

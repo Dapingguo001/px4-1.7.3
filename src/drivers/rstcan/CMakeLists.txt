@@ -13,6 +13,7 @@ px4_add_module(
 		rstcan_node_camera.cpp
 		rstcan_node_radar.cpp
 		rstcan_node_battery.cpp
+		rstcan_node_landing_gear.cpp
         stm32_can_drv.cpp
 	DEPENDS
 		platforms__common

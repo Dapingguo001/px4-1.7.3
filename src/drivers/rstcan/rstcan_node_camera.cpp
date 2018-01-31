@@ -138,16 +138,21 @@ int	RSTCan_Node_Camera::ioctl(struct file *filp, int cmd, unsigned long arg)
 
 void RSTCan_Node_Camera::test(char *arg)
 {
-    orb_advert_t test_pub;
+    orb_advert_t test_pub[RSTCAN_MAX_INDEX] = {nullptr};
     struct rstcan_camera_s orb_msg = {0};
     int instance = _node_idx;
 
-    ::printf("camera test, you can indicate these test items: ptz/record/snap/zoomin/zoomout/zoomstop\n");
+    ::printf("camera%d test, you can indicate these test items: ptz/record/snap/zoomin/zoomout/zoomstop\n", instance);
 
     if(arg == nullptr)
         return;
 
-    test_pub = orb_advertise_multi(ORB_ID(rstcan_camera), &orb_msg, &instance, ORB_PRIO_DEFAULT);
+    //第一个发布返回的instance一定是0，如果要测试第二个节点，必须发布第二次，第三个节点以此类推
+    for(int i = 0; i <= _node_idx; i++)
+    {
+        test_pub[i] = orb_advertise_multi(ORB_ID(rstcan_camera), &orb_msg, &instance, ORB_PRIO_DEFAULT);
+        orb_publish(ORB_ID(rstcan_camera), test_pub[i], &orb_msg);
+    }
     ::printf("advertise success\n");
 
     if(strcmp(arg, "ptz") == 0)
@@ -223,6 +228,8 @@ void RSTCan_Node_Camera::test(char *arg)
         memset(orb_msg.data, 0, sizeof(orb_msg.data));
     }
 
-    orb_publish(ORB_ID(rstcan_camera), test_pub, &orb_msg);
+    orb_publish(ORB_ID(rstcan_camera), test_pub[_node_idx], &orb_msg);
 
+    for(int i = 0; i <= _node_idx; i++)
+        orb_unadvertise(test_pub[i]);
 }

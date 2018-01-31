@@ -182,4 +182,20 @@ public:
     virtual void test(char *arg);
 };
 
+class RSTCan_Node_LandingGear: public RSTCan_Node
+{
+private:
+    int _orb_sub_fd;
+protected:
+    virtual int32_t _task();
+public:
+    RSTCan_Node_LandingGear(const char *name, const char *path, void *_master_node, void *_slave_node, uint8_t idx);
+    virtual ~RSTCan_Node_LandingGear();
+    virtual int	init();
+
+	virtual int	ioctl(struct file *filp, int cmd, unsigned long arg);
+    virtual void test(char *arg);
+private:
+};
+
 
