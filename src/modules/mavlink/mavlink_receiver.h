@@ -158,6 +158,7 @@ private:
 	void handle_message_named_value_float(mavlink_message_t *msg);
 	void handle_message_debug(mavlink_message_t *msg);
 	void handle_message_debug_vect(mavlink_message_t *msg);
+	void handle_rst_camera(const mavlink_command_long_t &cmd_mavlink);
 
 	void *receive_thread(void *arg);
 
