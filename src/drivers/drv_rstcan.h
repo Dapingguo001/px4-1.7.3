@@ -27,11 +27,18 @@
 //作为struct rstcan_camera中的data部分
 //XXX 结构体长度不可超过camera_can_payload_t中的data数组
 //XXX 必须和dev manager中的ptz_ctrl_t相同！！
+#define RST_PTZ_CTRL_MIDDLE_MODE      (1)
+#define RST_PTZ_CTRL_VERTICAL_MODE    (2)
+#define RST_PTZ_CTRL_HEAD_LOCK_MODE   (3)
+#define RST_PTZ_CTRL_HEAD_FOLLOW_MODE (4)
+#pragma pack(push, 1)
 typedef struct ptz_ctrl {
+    uint8_t mode;
     float roll;
     float pitch;
     float yaw;
 }ptz_ctrl_t;
+#pragma pack(pop)
 
 
 //XXX 必须和dev manager中的相同！！

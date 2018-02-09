@@ -161,6 +161,8 @@ void RSTCan_Node_Camera::test(char *arg)
         static bool orentation = false;
         ptz_ctrl_t ptz;
 
+        ptz.mode = RST_PTZ_CTRL_HEAD_LOCK_MODE;
+
         if(stop == false)
         {
             ptz.roll = 0.0f;
