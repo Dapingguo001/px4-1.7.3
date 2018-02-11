@@ -77,6 +77,7 @@
 #include <uORB/topics/transponder_report.h>
 #include <uORB/topics/gps_inject_data.h>
 #include <uORB/topics/collision_report.h>
+#include <uORB/topics/rst_dev_cmd.h>
 
 #include "mavlink_mission.h"
 #include "mavlink_parameters.h"
@@ -158,6 +159,8 @@ private:
 	void handle_message_named_value_float(mavlink_message_t *msg);
 	void handle_message_debug(mavlink_message_t *msg);
 	void handle_message_debug_vect(mavlink_message_t *msg);
+	
+	bool handle_rst_dev_command(const mavlink_command_long_t &cmd_mavlink);
 
 	void *receive_thread(void *arg);
 

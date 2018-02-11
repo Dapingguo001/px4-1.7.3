@@ -121,6 +121,7 @@ set(msg_files
 	vehicle_status_flags.msg
 	vtol_vehicle_status.msg
 	wind_estimate.msg
+	rst_dev_cmd.msg
     rstcan_camera.msg
     rstcan_radar.msg
     rstcan_landing_gear.msg

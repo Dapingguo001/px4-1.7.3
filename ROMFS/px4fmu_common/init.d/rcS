@@ -589,75 +589,75 @@ then
 	#
 	# XXX We need a better way for runtime eval of shell variables,
 	# but this works for now
-	if param compare SYS_COMPANION 10
-	then
-		frsky_telemetry start -d ${MAVLINK_COMPANION_DEVICE}
-	fi
-	if param compare SYS_COMPANION 20
-	then
-		syslink start
-		mavlink start -d /dev/bridge0 -b 57600 -m osd -r 40000
-	fi
-	if param compare SYS_COMPANION 921600
-	then
-		if ver hwcmp AEROFC_V1
-		then
-			if protocol_splitter start ${MAVLINK_COMPANION_DEVICE}
-			then
-				mavlink start -d /dev/mavlink -b 921600 -m onboard -r 5000 -x
-				micrortps_client start -d /dev/rtps -b 921600 -l -1 -s 2000
-			else
-				 mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 921600 -m onboard -r 80000 -x -f
-			fi
-		else
-			mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 921600 -m onboard -r 80000 -x -f
-		fi
-	fi
-	if param compare SYS_COMPANION 57600
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -m onboard -r 5000 -x -f
-	fi
-	if param compare SYS_COMPANION 460800
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 460800 -m onboard -r 5000 -x -f
-	fi
-	if param compare SYS_COMPANION 157600
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -m osd -r 1000
-	fi
-	if param compare SYS_COMPANION 257600
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -m magic -r 5000 -x -f
-	fi
-	if param compare SYS_COMPANION 319200
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 19200 -r 1000 -f
-	fi
-	if param compare SYS_COMPANION 338400
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 38400 -r 1000 -f
-	fi
-	if param compare SYS_COMPANION 357600
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -r 1000 -f
-	fi
-	if param compare SYS_COMPANION 3115200
-	then
+#	if param compare SYS_COMPANION 10
+#	then
+#		frsky_telemetry start -d ${MAVLINK_COMPANION_DEVICE}
+#	fi
+#	if param compare SYS_COMPANION 20
+#	then
+#		syslink start
+#		mavlink start -d /dev/bridge0 -b 57600 -m osd -r 40000
+#	fi
+#	if param compare SYS_COMPANION 921600
+#	then
+#		if ver hwcmp AEROFC_V1
+#		then
+#			if protocol_splitter start ${MAVLINK_COMPANION_DEVICE}
+#			then
+#				mavlink start -d /dev/mavlink -b 921600 -m onboard -r 5000 -x
+#				micrortps_client start -d /dev/rtps -b 921600 -l -1 -s 2000
+#			else
+#				 mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 921600 -m onboard -r 80000 -x -f
+#			fi
+#		else
+#			mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 921600 -m onboard -r 80000 -x -f
+#		fi
+#	fi
+#	if param compare SYS_COMPANION 57600
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -m onboard -r 5000 -x -f
+#	fi
+#	if param compare SYS_COMPANION 460800
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 460800 -m onboard -r 5000 -x -f
+#	fi
+#	if param compare SYS_COMPANION 157600
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -m osd -r 1000
+#	fi
+#	if param compare SYS_COMPANION 257600
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -m magic -r 5000 -x -f
+#	fi
+#	if param compare SYS_COMPANION 319200
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 19200 -r 1000 -f
+#	fi
+#	if param compare SYS_COMPANION 338400
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 38400 -r 1000 -f
+#	fi
+#	if param compare SYS_COMPANION 357600
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -r 1000 -f
+#	fi
+#	if param compare SYS_COMPANION 3115200
+#	then
 		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 115200 -r 1000 -f
-	fi
-	if param compare SYS_COMPANION 419200
-	then
-		iridiumsbd start -d /dev/ttyS2
-		mavlink start -d /dev/iridium -b 19200 -m iridium -r 10
-	fi
-	if param compare SYS_COMPANION 1921600
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 921600 -r 20000
-	fi
-	if param compare SYS_COMPANION 1500000
-	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 1500000 -m onboard -r 10000 -x -f
-	fi
+#	fi
+#	if param compare SYS_COMPANION 419200
+#	then
+#		iridiumsbd start -d /dev/ttyS2
+#		mavlink start -d /dev/iridium -b 19200 -m iridium -r 10
+#	fi
+#	if param compare SYS_COMPANION 1921600
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 921600 -r 20000
+#	fi
+#	if param compare SYS_COMPANION 1500000
+#	then
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 1500000 -m onboard -r 10000 -x -f
+#	fi
 
 	unset MAVLINK_COMPANION_DEVICE
 
@@ -1028,6 +1028,14 @@ then
 		if vmount start
 		then
 		fi
+	fi
+	
+	#
+	#rst device manage
+	#
+	if ver hwcmp PX4FMU_V4
+	then
+		rst_dev_manage start
 	fi
 
 # End of autostart

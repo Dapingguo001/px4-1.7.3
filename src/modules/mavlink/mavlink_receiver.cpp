@@ -491,6 +491,45 @@ MavlinkReceiver::handle_message_command_int(mavlink_message_t *msg)
 	handle_message_command_both(msg, cmd_mavlink, vcmd);
 }
 
+/* 若是rst device 指令，则返回true， 否则为false*/
+bool
+MavlinkReceiver::handle_rst_dev_command(const mavlink_command_long_t &cmd_mavlink)
+{	
+	bool bRSTdev = true;
+
+	/* advertise topic */
+	struct rst_dev_cmd_s rst_dev;
+	memset(&rst_dev, 0, sizeof(rst_dev));
+	static orb_advert_t rst_dev_pub;
+
+	static bool bAdvertised = false;
+	if (!bAdvertised) {
+		rst_dev_pub = orb_advertise(ORB_ID(rst_dev_cmd), &rst_dev);
+		bAdvertised = true;
+	}
+
+	/* handle command */
+	switch (cmd_mavlink.command) {
+	
+	case MAV_CMD_NAV_CAMERA: 
+		rst_dev.cmd = rst_dev_cmd_s::RST_DEV_CAMERA;
+		break;
+	//-------------------------------
+	/*add other device command here*/
+	//-------------------------------
+	default:
+		bRSTdev = false;
+	}
+
+	if (bRSTdev) {
+		const float *p = &(cmd_mavlink.param1);
+		for (int i=0; i<7; i++,p++) {//copy param1 ~ param7，为节省空间将float转为int8存储，和message对应
+			rst_dev.data[i] = (int8_t)(*p);
+		}
+		orb_publish(ORB_ID(rst_dev_cmd), rst_dev_pub, &rst_dev);
+	}
+	return bRSTdev;
+}
 
 template <class T>
 void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const T &cmd_mavlink,
@@ -527,6 +566,9 @@ void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const 
 
 	} else if (cmd_mavlink.command == MAV_CMD_REQUEST_FLIGHT_INFORMATION) {
 		send_flight_information();
+
+	} else if (handle_rst_dev_command((const mavlink_command_long_t &)cmd_mavlink)){
+		/* 空，在if中已经执行相关操作 */
 
 	} else {
 
