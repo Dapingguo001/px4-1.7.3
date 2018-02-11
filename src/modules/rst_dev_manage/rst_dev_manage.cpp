@@ -255,6 +255,14 @@ RSTdeviceManage::handle_rst_camera(const struct rst_dev_cmd_s &cmd_mavlink)
 	} else {
 		index = 0;
 	}
+	switch (cmd_mavlink.data[6]){//|回中(0:default,1:回中)
+	case 1:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
+			ptz.mode = RST_PTZ_CTRL_MIDDLE_MODE;
+			break;
+	default:ptz.mode = RST_PTZ_CTRL_HEAD_LOCK_MODE;
+			break;
+	}
+	
 
 	if (camera.cmd == rstcan_camera_s::RST_CAMERA_PTZ_CTRL){//姿态控制时，添加姿态信息pitch、yaw
 		memcpy(&camera.data, &ptz, sizeof(ptz));
