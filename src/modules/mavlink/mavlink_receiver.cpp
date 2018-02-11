@@ -494,92 +494,44 @@ MavlinkReceiver::handle_message_command_int(mavlink_message_t *msg)
 	handle_message_command_both(msg, cmd_mavlink, vcmd);
 }
 
-void MavlinkReceiver::handle_rst_camera(const mavlink_command_long_t &cmd_mavlink)
-{
-	const int num = 2;
-	int index = 0;
+/* 若是rst device 指令，则返回true， 否则为false*/
+bool
+MavlinkReceiver::handle_rst_dev_command(const mavlink_command_long_t &cmd_mavlink)
+{	
+	bool bRSTdev = true;
 
 	/* advertise topic */
-	ptz_ctrl_t ptz;
-	memset(&ptz, 0, sizeof(ptz));
-	struct rstcan_camera_s camera;
-	memset(&camera, 0, sizeof(camera));
-	static orb_advert_t camera_pub[num];
+	struct rst_dev_cmd_s rst_dev;
+	memset(&rst_dev, 0, sizeof(rst_dev));
+	static orb_advert_t rst_dev_pub;
 
 	static bool bAdvertised = false;
 	if (!bAdvertised) {
-		//第一个发布返回的instance一定是0，如果要测试第二个节点，必须发布第二次，第三个节点以此类推
-		for(int i = 0; i < num; i++)
-		{
-			orb_advert_t tmp_pub = orb_advertise_multi(ORB_ID(rstcan_camera), &camera, &index, ORB_PRIO_DEFAULT);
-			camera_pub[index] = tmp_pub;
-			orb_publish(ORB_ID(rstcan_camera), camera_pub[index], &camera);
-			::printf ("instance: %d\n", index);
-		}
+		rst_dev_pub = orb_advertise(ORB_ID(rst_dev_cmd), &rst_dev);
 		bAdvertised = true;
 	}
 
-	switch ((int)cmd_mavlink.param1){//|up or down(0:default,1:stop,2:up,3:down)
-	case 1:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-			break;
-	case 2:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-			ptz.pitch = 1;
-			break;
-	case 3:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-			ptz.pitch = -1;
-			break;
-	default:break;
-	}
-	switch ((int)cmd_mavlink.param2){//|left or right(0:default,1:stop,2:left,3:right)
-	case 1:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-			break;
-	case 2:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-			ptz.yaw = -1;
-			break;
-	case 3:	camera.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
-			ptz.yaw = 1;
-			break;
-	default:break;
-	}
-	switch ((int)cmd_mavlink.param3){//|camera shot(0:default,1:shot)
-	case 1:	camera.cmd = rstcan_camera_s::RST_CAMERA_SNAPSHOT;
-			break;
-	default:break;
-	}
-	switch ((int)cmd_mavlink.param4){//|camera video(0:default,1:stop,2:recording)
-	case 1:	camera.cmd = rstcan_camera_s::RST_CAMERA_RECORD_STOP;
-			break;
-	case 2:	camera.cmd = rstcan_camera_s::RST_CAMERA_RECORD_START;
-			break;
-	default:break;
-	}
-	switch ((int)cmd_mavlink.param5){//|zoom in or out(0:default,1:stop,2:zoom in,3:zoom out)
-	case 1:	camera.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_STOP;
-			break;
-	case 2:	camera.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_IN;
-			break;
-	case 3:	camera.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_OUT;
-			break;
-	default:break;
-	}
-	if ((int)cmd_mavlink.param6 > 0 && (int)cmd_mavlink.param6 <= num){//0:none camera,1:down camera,2:up camera)
-		index = (int)cmd_mavlink.param6 - 1;
-	} else {
-		index = 0;
+	/* handle command */
+	switch (cmd_mavlink.command) {
+	
+	case MAV_CMD_NAV_CAMERA: 
+		rst_dev.cmd = rst_dev_cmd_s::RST_DEV_CAMERA;
+		break;
+	//-------------------------------
+	/*add other device command here*/
+	//-------------------------------
+	default:
+		bRSTdev = false;
 	}
 
-	if (camera.cmd == rstcan_camera_s::RST_CAMERA_PTZ_CTRL){//姿态控制时，添加姿态信息pitch、yaw
-		memcpy(&camera.data, &ptz, sizeof(ptz));
+	if (bRSTdev) {
+		const float *p = &(cmd_mavlink.param1);
+		for (int i=0; i<7; i++,p++) {//copy param1 ~ param7，为节省空间将float转为int8存储，和message对应
+			rst_dev.data[i] = (int8_t)(*p);
+		}
+		orb_publish(ORB_ID(rst_dev_cmd), rst_dev_pub, &rst_dev);
 	}
-	/* publish topic */
-	orb_publish(ORB_ID(rstcan_camera), camera_pub[index], &camera);
-	::printf ("camera- %d: %d %d %d %d %d %d\n", index, (int)cmd_mavlink.param1, 
-														(int)cmd_mavlink.param2,
-														(int)cmd_mavlink.param3,
-														(int)cmd_mavlink.param4,
-														(int)cmd_mavlink.param5,
-														(int)cmd_mavlink.param6);
-
+	return bRSTdev;
 }
 
 template <class T>
@@ -617,10 +569,10 @@ void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const 
 
 	} else if (cmd_mavlink.command == MAV_CMD_REQUEST_FLIGHT_INFORMATION) {
 		send_flight_information();
-	
-	} else if (cmd_mavlink.command == MAV_CMD_NAV_CAMERA) {
-		handle_rst_camera((const mavlink_command_long_t &)cmd_mavlink);
-	
+
+	} else if (handle_rst_dev_command((const mavlink_command_long_t &)cmd_mavlink)){
+		/* 空，在if中已经执行相关操作 */
+
 	} else {
 
 		send_ack = false;

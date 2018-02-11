@@ -141,6 +141,11 @@ set(config_module_list
 	modules/dataman
 
 	#
+	# robsense
+	#
+	modules/rst_dev_manage
+
+	#
 	# Libraries
 	#
 	lib/controllib
