@@ -32,7 +32,10 @@
 #include <drivers/drv_rstcan.h>
 
 #define CANID_ALLOCATION_TIMOUT_US  200000   //id分配每一步的等待时间
-
+/*
+字节     byte1	     byte2	     byte3     byte4-byte8
+含义  产品线编号  硬件设计版本	生产批次   ID号，按1步进
+*/
 static uint8_t uid[RSTCAN_UID_SIZE] = {0};
 
 extern "C" { __EXPORT int rstcan_main(int argc, char *argv[]); }
