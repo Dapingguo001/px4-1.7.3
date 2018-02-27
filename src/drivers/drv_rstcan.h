@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 
+#define RSTCAN_UID_SIZE             (8)  //设备ID号一共8个字节
+
 #define RSTCAN_MANAGER_DEV_BASE_PATH   "/dev/rstcan"
 #define RSTCAN_MANAGER_DEV0            "/dev/rstcan0"
 #define RSTCAN_MANAGER_DEV1            "/dev/rstcan1"
@@ -23,6 +25,7 @@
 #define RSTCAN_IOC_SET_4G_SERVER    _IOC(RSTCAN_IOC_BASE, 1)
 
 #define RSTCAN_IOC_SLAVE_REBOOT     _IOC(RSTCAN_IOC_BASE, 2)
+#define RSTCAN_IOC_GET_UID          _IOC(RSTCAN_IOC_BASE, 3)
 
 //作为struct rstcan_camera中的data部分
 //XXX 结构体长度不可超过camera_can_payload_t中的data数组

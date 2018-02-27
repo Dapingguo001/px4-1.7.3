@@ -142,7 +142,7 @@ void RSTCan_Node_Camera::test(char *arg)
     struct rstcan_camera_s orb_msg = {0};
     int instance = _node_idx;
 
-    ::printf("camera%d test, you can indicate these test items: ptz/record/snap/zoomin/zoomout/zoomstop\n", instance);
+    ::printf("camera%d test, you can indicate these test items: ptz/record/snap/zoomin/zoomout/zoomstop/middle\n", instance);
 
     if(arg == nullptr)
         return;
@@ -228,6 +228,16 @@ void RSTCan_Node_Camera::test(char *arg)
     {
         orb_msg.cmd = rstcan_camera_s::RST_CAMERA_ZOOM_STOP;
         memset(orb_msg.data, 0, sizeof(orb_msg.data));
+    }
+    else if(strcmp(arg, "middle") == 0)
+    {
+        ptz_ctrl_t ptz = {0};
+    
+        ptz.mode = RST_PTZ_CTRL_MIDDLE_MODE;
+
+        ::printf("ptz middle\n");
+        orb_msg.cmd = rstcan_camera_s::RST_CAMERA_PTZ_CTRL;
+        memcpy(orb_msg.data, &ptz, sizeof(ptz));
     }
 
     orb_publish(ORB_ID(rstcan_camera), test_pub[_node_idx], &orb_msg);

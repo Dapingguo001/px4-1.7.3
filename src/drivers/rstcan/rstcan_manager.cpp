@@ -25,12 +25,15 @@
 
 #include <board_config.h>
 #include <nuttx/can/can.h>
+#include <systemlib/otp.h>
 
 #include "rstcan_manager.h"
 #include "can_proto.h"
 #include <drivers/drv_rstcan.h>
 
 #define CANID_ALLOCATION_TIMOUT_US  200000   //id分配每一步的等待时间
+
+static uint8_t uid[RSTCAN_UID_SIZE] = {0};
 
 extern "C" { __EXPORT int rstcan_main(int argc, char *argv[]); }
 
@@ -63,6 +66,15 @@ int	RSTCan_Manager::ioctl(struct file *filp, int cmd, unsigned long arg)
     {
         case RSTCAN_IOC_SLAVE_REBOOT:
             ret = _broadcast_all(BST_SLAVE_REBOOT_SUB_MSG, NULL, 0);
+            break;
+        
+        case RSTCAN_IOC_GET_UID:
+            if(arg != 0)
+            {
+                memcpy((void *)arg, (const void *)uid, sizeof(uid));
+                ret = 0;
+            }
+
             break;
         default:
             /* see if the parent class can make any use of it */
@@ -399,6 +411,7 @@ int rstcan_main(int argc, char *argv[])
 	int ch;
     char *node_name = NULL;
     char *arg = NULL;
+
 	/* jump over start/off/etc and look at options first */
 	while ((ch = getopt(argc, argv, "XR:")) != EOF) {
 		switch (ch) {
@@ -410,7 +423,15 @@ int rstcan_main(int argc, char *argv[])
 
 	const char *verb = argv[optind];
 
-//    rstcan_info("argc=%d verb=%s\n", argc, verb);
+    //读OTP区域
+    val_read((void *)uid, (volatile const void *)ADDR_OTP_START, sizeof(uid));
+    ::printf("uid=");
+    for(int i = 0; i < (int)sizeof(uid); i++)
+    {
+        ::printf("0x%x ", uid[i]);
+    }
+    ::printf("\n");
+
 	/*
 	 * Start/load the driver.
 	 */
