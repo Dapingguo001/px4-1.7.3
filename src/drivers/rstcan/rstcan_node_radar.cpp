@@ -37,7 +37,7 @@ int RSTCan_Node_Radar::init()
 
     ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_SVC, 64, false); //注册普通消息,用于收发控制信息
 
-    RSTCan_Node::node_task_start(0, this);
+    RSTCan_Node::node_task_start(1024, this);
 
 out:
     return ret;

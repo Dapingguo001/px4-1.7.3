@@ -28,6 +28,10 @@ RSTCan_Node_Camera::~RSTCan_Node_Camera()
 int RSTCan_Node_Camera::init()
 {
     int ret = -1;
+ //   struct mallinfo data;
+
+ //   data = mallinfo();
+  //  ::printf("free mem:%d\n", data.fordblks);
 
     ret = RSTCan_Node::init();
     if(ret != 0)
@@ -35,9 +39,9 @@ int RSTCan_Node_Camera::init()
         goto out;
     }
 
-    ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_NOR, 40, false); //注册普通消息,用于收发控制信息
+    ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_NOR, 16, false); //注册普通消息,用于收发控制信息
 
-    RSTCan_Node::node_task_start(10000, this);
+    RSTCan_Node::node_task_start(1500, this);
 
 out:
     return ret;

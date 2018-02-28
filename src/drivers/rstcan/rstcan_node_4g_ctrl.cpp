@@ -35,7 +35,7 @@ int RSTCan_Node_4G_CTRL::init()
         goto out;
     }
 
-    ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_NOR, 40, false); //注册普通消息,用于收发控制信息
+    ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_NOR, 16, false); //注册普通消息,用于收发控制信息
 
 out:
     return ret;

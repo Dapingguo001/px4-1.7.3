@@ -76,7 +76,7 @@ public:
     virtual void print_data();
     virtual void test(char *arg);
 
-    void node_task_start(int32_t interval, void *arg);
+    void node_task_start(uint32_t stack_size, void *arg);
     void node_task_stop();
     char *get_node_name(){return (char *)_name;}
     uint8_t get_node_idx(){return _node_idx;}

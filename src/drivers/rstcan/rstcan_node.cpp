@@ -66,7 +66,7 @@ void RSTCan_Node::poll_notify(pollevent_t events)
     CDev::poll_notify(events);
 }
 
-void RSTCan_Node::node_task_start(int32_t interval, void *arg)
+void RSTCan_Node::node_task_start(uint32_t stack_size, void *arg)
 {
 //    _call.period = interval;
 //
@@ -78,7 +78,7 @@ void RSTCan_Node::node_task_start(int32_t interval, void *arg)
     _task_fd = px4_task_spawn_cmd(_name,
 					   SCHED_DEFAULT,
 					   SCHED_PRIORITY_MAX - 5,
-					   5900,
+					   stack_size,
 					   (px4_main_t)&RSTCan_Node::_task_trampoline,
 					   nullptr);
 

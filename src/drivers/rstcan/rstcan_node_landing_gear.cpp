@@ -35,9 +35,9 @@ int RSTCan_Node_LandingGear::init()
         goto out;
     }
 
-    ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_NOR, 40, false); //注册普通消息,用于收发控制信息
+    ret = rstcan_register_msg(slave_node, RSTCAN_MSG_TYPE_NOR, 8, false); //注册普通消息,用于收发控制信息
 
-    RSTCan_Node::node_task_start(10000, this);
+    RSTCan_Node::node_task_start(1024, this);
 
 out:
     return ret;
