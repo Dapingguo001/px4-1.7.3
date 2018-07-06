@@ -244,7 +244,6 @@ RGBLED_PWM::led()
 			_r = 0; _g = 0; _b = 0;
 			break;
 		}
-
 		_brightness = (float)led_control_data.leds[0].brightness / 255.f;
 
 		send_led_rgb();

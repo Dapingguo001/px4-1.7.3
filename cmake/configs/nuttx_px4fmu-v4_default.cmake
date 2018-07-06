@@ -42,7 +42,8 @@ set(config_module_list
 	drivers/pwm_out_sim
 	drivers/px4flow
 	drivers/px4fmu
-	drivers/rgbled
+#	drivers/rgbled
+	drivers/rgbled_pwm
     #robsense
 	drivers/rstcan
 	drivers/sdp3x_airspeed
