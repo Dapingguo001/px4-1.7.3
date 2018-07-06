@@ -478,6 +478,7 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 	SPI_SELECT(spi1, PX4_SPIDEV_GYRO, false);
 	SPI_SELECT(spi1, PX4_SPIDEV_HMC, false);
 	SPI_SELECT(spi1, PX4_SPIDEV_MPU, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_BARO, false);
 	up_udelay(20);
 
 	/* Get the SPI port for the FRAM */
@@ -499,7 +500,7 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 	SPI_SETBITS(spi2, 8);
 	SPI_SETMODE(spi2, SPIDEV_MODE3);
 	SPI_SELECT(spi2, SPIDEV_FLASH(0), false);
-	SPI_SELECT(spi2, PX4_SPIDEV_BARO, false);
+//	SPI_SELECT(spi2, PX4_SPIDEV_BARO, false);
 
 #ifdef CONFIG_MMCSD
 	/* First, get an instance of the SDIO interface */
