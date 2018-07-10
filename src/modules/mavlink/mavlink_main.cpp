@@ -80,6 +80,8 @@
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/vehicle_command_ack.h>
 #include <uORB/topics/mavlink_log.h>
+#include <uORB/topics/rst_swarm_link_light_control_component.h>
+#include <uORB/topics/rst_swarm_link_fc_statue_send.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_main.h"
@@ -2008,18 +2010,22 @@ Mavlink::task_main(int argc, char *argv[])
 	if (_mode != MAVLINK_MODE_IRIDIUM) {
 
 		/* HEARTBEAT is constant rate stream, rate never adjusted */
-		configure_stream("HEARTBEAT", 1.0f);
+//		configure_stream("HEARTBEAT", 1.0f);
 
 		/* STATUSTEXT stream is like normal stream but gets messages from logbuffer instead of uORB */
-		configure_stream("STATUSTEXT", 20.0f);
+//		configure_stream("STATUSTEXT", 20.0f);
 
 		/* COMMAND_LONG stream: use unlimited rate to send all commands */
-		configure_stream("COMMAND_LONG");
+//		configure_stream("COMMAND_LONG");
 
 	}
 
 	switch (_mode) {
 	case MAVLINK_MODE_NORMAL:
+		configure_stream("HEARTBEAT", 1.0f);
+		configure_stream("STATUSTEXT", 20.0f);
+		configure_stream("COMMAND_LONG");
+
 		configure_stream("SYS_STATUS", 1.0f);
 		configure_stream("EXTENDED_SYS_STATE", 1.0f);
 		configure_stream("HIGHRES_IMU", 1.5f);
@@ -2050,6 +2056,10 @@ Mavlink::task_main(int argc, char *argv[])
 		break;
 
 	case MAVLINK_MODE_ONBOARD:
+		configure_stream("HEARTBEAT", 1.0f);
+		configure_stream("STATUSTEXT", 20.0f);
+		configure_stream("COMMAND_LONG");
+
 		configure_stream("SYS_STATUS", 5.0f);
 		configure_stream("EXTENDED_SYS_STATE", 5.0f);
 		configure_stream("HIGHRES_IMU", 50.0f);
@@ -2086,6 +2096,10 @@ Mavlink::task_main(int argc, char *argv[])
 		break;
 
 	case MAVLINK_MODE_OSD:
+		configure_stream("HEARTBEAT", 1.0f);
+		configure_stream("STATUSTEXT", 20.0f);
+		configure_stream("COMMAND_LONG");
+
 		configure_stream("SYS_STATUS", 5.0f);
 		configure_stream("EXTENDED_SYS_STATE", 1.0f);
 		configure_stream("ATTITUDE", 25.0f);
@@ -2108,6 +2122,10 @@ Mavlink::task_main(int argc, char *argv[])
 
 	case MAVLINK_MODE_CONFIG:
 		// Enable a number of interesting streams we want via USB
+		configure_stream("HEARTBEAT", 1.0f);
+		configure_stream("STATUSTEXT", 20.0f);
+		configure_stream("COMMAND_LONG");
+
 		configure_stream("SYS_STATUS", 1.0f);
 		configure_stream("EXTENDED_SYS_STATE", 2.0f);
 		configure_stream("HIGHRES_IMU", 50.0f);
@@ -2369,6 +2387,31 @@ Mavlink::task_main(int argc, char *argv[])
 
 			_bytes_timestamp = t;
 		}
+
+		mavlink_rst_fc_statue_t mavlink_rst_fc_statue_send;
+		bool updated;
+		orb_check(swarm_link_fc_statue_send_sub, &updated);
+		if(updated)
+		{
+			orb_copy(ORB_ID(rst_swarm_link_fc_statue_send), 
+						swarm_link_fc_statue_send_sub, &_fc_statue_send);
+
+			mavlink_rst_fc_statue_send.lat = _fc_statue_send.lat;
+			mavlink_rst_fc_statue_send.lon = _fc_statue_send.lon;
+			mavlink_rst_fc_statue_send.alt = _fc_statue_send.alt;
+			mavlink_rst_fc_statue_send.relative_alt = _fc_statue_send.relative_alt;
+			mavlink_rst_fc_statue_send.voltage_battery = _fc_statue_send.voltage_battery;
+			mavlink_rst_fc_statue_send.param_index = _fc_statue_send.param_index;
+			mavlink_rst_fc_statue_send.fix_type	= _fc_statue_send.fix_type;
+			mavlink_rst_fc_statue_send.battery_remaining = _fc_statue_send.battery_remaining;
+			mavlink_rst_fc_statue_send.param1 = _fc_statue_send.param1;
+			mavlink_rst_fc_statue_send.param2 = _fc_statue_send.param2;
+			mavlink_rst_fc_statue_send.param3 = _fc_statue_send.param3;
+			mavlink_rst_fc_statue_send.param4 = _fc_statue_send.param4;
+
+			mavlink_msg_rst_fc_statue_send_struct(get_channel(),&mavlink_rst_fc_statue_send);
+		}
+
 
 		perf_end(_loop_perf);
 

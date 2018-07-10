@@ -125,6 +125,12 @@ set(msg_files
     rstcan_camera.msg
     rstcan_radar.msg
     rstcan_landing_gear.msg
+	rst_swarm_link_light_control_receive.msg
+	rst_swarm_link_light_control_send.msg
+	rst_swarm_link_fc_statue_receive.msg
+	rst_swarm_link_fc_statue_send.msg
+	rst_swarm_link_light_control_component.msg
+
 	)
 
 px4_add_git_submodule(TARGET git_gencpp PATH tools/gencpp)

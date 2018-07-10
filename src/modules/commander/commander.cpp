@@ -121,6 +121,7 @@
 #include <uORB/topics/vehicle_status_flags.h>
 #include <uORB/topics/vtol_vehicle_status.h>
 #include <uORB/topics/estimator_status.h>
+#include <uORB/topics/rst_swarm_link_light_control_receive.h>
 
 typedef enum VEHICLE_MODE_FLAG
 {
@@ -1576,6 +1577,14 @@ Commander::run()
 
 	int cpuload_sub = orb_subscribe(ORB_ID(cpuload));
 	memset(&cpuload, 0, sizeof(cpuload));
+
+	int _swarm_link_light_control_receive_sub = orb_subscribe(ORB_ID(rst_swarm_link_light_control_receive));
+	struct rst_swarm_link_light_control_receive_s _light_control_receive;
+	memset(&_light_control_receive, 0, sizeof(_light_control_receive));
+	uint8_t swarm_link_led_mode = 0;
+	uint8_t swarm_link_led_color = 0;
+
+	bool swarm_link_led_to_state_led = false;
 
 	control_status_leds(&status, &armed, true, &battery, &cpuload);
 
@@ -3191,6 +3200,68 @@ Commander::run()
 		}
 
 		arm_auth_update(now, params_updated || param_init_forced);
+
+		orb_check(_swarm_link_light_control_receive_sub, &updated);
+        if(updated)
+        {
+            orb_copy(ORB_ID(rst_swarm_link_light_control_receive), 
+						_swarm_link_light_control_receive_sub, &_light_control_receive);
+		}
+		
+		if(((_light_control_receive.state >> 7) & 0x01) ==1)
+		{
+			if(_light_control_receive.red && !_light_control_receive.green && !_light_control_receive.blue)
+			{
+				swarm_link_led_color = led_control_s::COLOR_RED;
+			}
+			else if(!_light_control_receive.red && _light_control_receive.green && !_light_control_receive.blue)
+			{
+				swarm_link_led_color = led_control_s::COLOR_GREEN;
+			}
+			else if(!_light_control_receive.red && !_light_control_receive.green && _light_control_receive.blue)
+			{
+				swarm_link_led_color = led_control_s::COLOR_BLUE;
+			}
+			else if(_light_control_receive.red && _light_control_receive.green && !_light_control_receive.blue)
+			{
+				swarm_link_led_color = led_control_s::COLOR_YELLOW;
+			}
+			else if(_light_control_receive.red && !_light_control_receive.green && _light_control_receive.blue)
+			{
+				swarm_link_led_color = led_control_s::COLOR_PURPLE;
+			}
+			else if(!_light_control_receive.red && _light_control_receive.green && _light_control_receive.blue)
+			{
+				swarm_link_led_color = led_control_s::COLOR_CYAN;
+			}
+			else
+			{
+				swarm_link_led_color = led_control_s::COLOR_WHITE;
+			}
+			if((_light_control_receive.state & 0x0f) == 1)
+			{
+				swarm_link_led_mode = led_control_s::MODE_ON;
+			}
+			else if((_light_control_receive.state & 0x0f) == 2)
+			{
+				swarm_link_led_mode = led_control_s::MODE_BLINK_NORMAL;
+			}
+			else
+			{
+				swarm_link_led_mode = led_control_s::MODE_OFF;
+			}
+			swarm_link_led_to_state_led = true;
+			rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
+		}
+		else
+		{
+			if(swarm_link_led_to_state_led)
+			{
+				swarm_link_led_to_state_led = false;
+				status_changed = true;
+			}
+		}
+
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
 	}

@@ -63,6 +63,8 @@
 #include <uORB/topics/mission.h>
 #include <uORB/topics/mission_result.h>
 #include <uORB/topics/telemetry_status.h>
+#include <uORB/topics/rst_swarm_link_light_control_component.h>
+#include <uORB/topics/rst_swarm_link_fc_statue_send.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_orb_subscription.h"
@@ -621,6 +623,10 @@ private:
 	static constexpr unsigned RADIO_BUFFER_CRITICAL_LOW_PERCENTAGE = 25;
 	static constexpr unsigned RADIO_BUFFER_LOW_PERCENTAGE = 35;
 	static constexpr unsigned RADIO_BUFFER_HALF_PERCENTAGE = 50;
+
+	int swarm_link_fc_statue_send_sub{-1}; 
+	rst_swarm_link_fc_statue_send_s _fc_statue_send;
+	
 
 	int configure_stream(const char *stream_name, const float rate = -1.0f);
 

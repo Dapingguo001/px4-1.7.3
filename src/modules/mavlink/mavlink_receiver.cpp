@@ -141,6 +141,8 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_debug_vect_pub(nullptr),
 	_gps_inject_data_pub(nullptr),
 	_command_ack_pub(nullptr),
+	_swarm_link_light_control_receive_pub(nullptr),
+	_swarm_link_fc_statue_receive_pub(nullptr),
 	_control_mode_sub(orb_subscribe(ORB_ID(vehicle_control_mode))),
 	_actuator_armed_sub(orb_subscribe(ORB_ID(actuator_armed))),
 	_global_ref_timestamp(0),
@@ -161,6 +163,9 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_p_bat_crit_thr(param_find("BAT_CRIT_THR")),
 	_p_bat_low_thr(param_find("BAT_LOW_THR"))
 {
+	_swarm_link_light_control_receive_pub = orb_advertise(ORB_ID(rst_swarm_link_light_control_receive), &_light_control_receive);
+	_swarm_link_fc_statue_receive_pub = orb_advertise(ORB_ID(rst_swarm_link_fc_statue_receive), &_fc_statue_receive);
+
 }
 
 MavlinkReceiver::~MavlinkReceiver()
@@ -336,6 +341,14 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 
 	case MAVLINK_MSG_ID_DEBUG_VECT:
 		handle_message_debug_vect(msg);
+		break;
+			
+	case MAVLINK_MSG_ID_RST_LIGHT_CONTROL:
+		handle_message_rst_light_control(msg);
+		break;
+
+	case MAVLINK_MSG_ID_RST_FC_STATUE:
+		handle_message_rst_fc_statue(msg);
 		break;
 
 	default:
@@ -1499,6 +1512,42 @@ MavlinkReceiver::handle_message_play_tune(mavlink_message_t *msg)
 		}
 	}
 }
+
+void
+MavlinkReceiver::handle_message_rst_light_control(mavlink_message_t *msg)
+{
+	mavlink_rst_light_control_t light_control;
+	mavlink_msg_rst_light_control_decode(msg, &light_control);
+	_light_control_receive.state = light_control.state;
+	_light_control_receive.red = light_control.red;
+	_light_control_receive.green = light_control.green;
+	_light_control_receive.blue = light_control.blue;
+	orb_publish(ORB_ID(rst_swarm_link_light_control_receive), 
+						_swarm_link_light_control_receive_pub, &_light_control_receive);
+} 
+
+void
+MavlinkReceiver::handle_message_rst_fc_statue(mavlink_message_t *msg)
+{
+	mavlink_rst_fc_statue_t fc_statue;
+	mavlink_msg_rst_fc_statue_decode(msg, &fc_statue);
+	_fc_statue_receive.lat = fc_statue.lat;
+	_fc_statue_receive.lon = fc_statue.lon;
+	_fc_statue_receive.alt = fc_statue.alt;
+	_fc_statue_receive.relative_alt = fc_statue.relative_alt;
+	_fc_statue_receive.voltage_battery = fc_statue.voltage_battery;
+	_fc_statue_receive.param_index = fc_statue.param_index;
+	_fc_statue_receive.fix_type = fc_statue.fix_type;
+	_fc_statue_receive.battery_remaining = fc_statue.battery_remaining;
+	_fc_statue_receive.param1 = fc_statue.param1;
+	_fc_statue_receive.param2 = fc_statue.param2;
+	_fc_statue_receive.param3 = fc_statue.param3;
+	_fc_statue_receive.param4 = fc_statue.param4;
+
+	orb_publish(ORB_ID(rst_swarm_link_fc_statue_receive), 
+						_swarm_link_fc_statue_receive_pub, &_fc_statue_receive);
+}
+
 
 switch_pos_t
 MavlinkReceiver::decode_switch_pos(uint16_t buttons, unsigned sw)

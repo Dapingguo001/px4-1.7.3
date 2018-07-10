@@ -85,6 +85,7 @@
 #include "devices/src/ubx.h"
 #include "devices/src/mtk.h"
 #include "devices/src/ashtech.h"
+#include "rst_rtk_swarm.h"
 
 
 #define TIMEOUT_5HZ 500
@@ -696,6 +697,11 @@ GPS::run()
 				_helper = new GPSDriverAshtech(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
 				break;
 
+			case GPS_DRIVER_MODE_RST_RTK_SWARM:
+				_helper = new GPSDriverRST_RTK_SWARM(_interface, &GPS::callback, this, &_report_gps_pos);
+				break;
+
+
 			default:
 				break;
 			}
@@ -786,6 +792,10 @@ GPS::run()
 					break;
 
 				case GPS_DRIVER_MODE_ASHTECH:
+					_mode = GPS_DRIVER_MODE_RST_RTK_SWARM;
+				break;	
+
+				case GPS_DRIVER_MODE_RST_RTK_SWARM:
 					_mode = GPS_DRIVER_MODE_UBX;
 					usleep(500000); // tried all possible drivers. Wait a bit before next round
 					break;
@@ -866,6 +876,10 @@ GPS::print_status()
 		case GPS_DRIVER_MODE_ASHTECH:
 			PX4_INFO("protocol: ASHTECH");
 			break;
+
+		case GPS_DRIVER_MODE_RST_RTK_SWARM:
+			PX4_INFO("protocol: RST_SWARM_RTK");
+			break;	
 
 		default:
 			break;
@@ -1084,7 +1098,9 @@ GPS *GPS::instantiate(int argc, char *argv[], Instance instance)
 			} else if (!strcmp(myoptarg, "ash")) {
 				mode = GPS_DRIVER_MODE_ASHTECH;
 
-			} else {
+			}else if(!strcmp(myoptarg, "swarm_rtk")){
+				mode = GPS_DRIVER_MODE_RST_RTK_SWARM;
+			}else {
 				PX4_ERR("unknown interface: %s", myoptarg);
 				error_flag = true;
 			}

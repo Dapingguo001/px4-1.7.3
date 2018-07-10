@@ -107,6 +107,7 @@ set(config_module_list
 	modules/mavlink
 	modules/navigator
 	modules/uavcan
+	modules/swarm_link
 
 	#
 	# Estimation modules

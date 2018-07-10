@@ -78,6 +78,9 @@
 #include <uORB/topics/gps_inject_data.h>
 #include <uORB/topics/collision_report.h>
 #include <uORB/topics/rst_dev_cmd.h>
+#include <uORB/topics/rst_swarm_link_light_control_receive.h>
+#include <uORB/topics/rst_swarm_link_fc_statue_receive.h>
+
 
 #include "mavlink_mission.h"
 #include "mavlink_parameters.h"
@@ -163,6 +166,9 @@ private:
 	bool handle_rst_dev_command(const mavlink_command_long_t &cmd_mavlink);
 
 	void *receive_thread(void *arg);
+
+	void handle_message_rst_light_control(mavlink_message_t *msg);
+	void handle_message_rst_fc_statue(mavlink_message_t *msg);
 
 	/**
 	 * Set the interval at which the given message stream is published.
@@ -250,6 +256,9 @@ private:
 	static const int _gps_inject_data_queue_size = 6;
 	orb_advert_t _gps_inject_data_pub;
 	orb_advert_t _command_ack_pub;
+	orb_advert_t _swarm_link_light_control_receive_pub;
+	orb_advert_t _swarm_link_fc_statue_receive_pub;
+
 	int _control_mode_sub;
 	int _actuator_armed_sub;
 	uint64_t _global_ref_timestamp;
@@ -261,6 +270,10 @@ private:
 	struct offboard_control_mode_s _offboard_control_mode;
 	struct vehicle_attitude_setpoint_s _att_sp;
 	struct vehicle_rates_setpoint_s _rates_sp;
+
+	struct rst_swarm_link_fc_statue_receive_s _fc_statue_receive;
+	struct rst_swarm_link_light_control_receive_s _light_control_receive;
+
 	double _time_offset_avg_alpha;
 	int64_t _time_offset;
 	int	_orb_class_instance;
