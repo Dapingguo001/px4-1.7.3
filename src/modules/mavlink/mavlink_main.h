@@ -555,7 +555,8 @@ private:
 	uint64_t		_mavlink_start_time;
 	int32_t			_protocol_version_switch;
 	int32_t			_protocol_version;
-
+	uint8_t         swarm_link_fill_byte[1230];
+	bool            start_swarm_link_fill_byte;
 	unsigned		_bytes_tx;
 	unsigned		_bytes_txerr;
 	unsigned		_bytes_rx;

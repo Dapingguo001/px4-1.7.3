@@ -1515,7 +1515,7 @@ MavlinkReceiver::handle_message_play_tune(mavlink_message_t *msg)
 
 void
 MavlinkReceiver::handle_message_rst_light_control(mavlink_message_t *msg)
-{
+{ 
 	mavlink_rst_light_control_t light_control;
 	mavlink_msg_rst_light_control_decode(msg, &light_control);
 	_light_control_receive.state = light_control.state;

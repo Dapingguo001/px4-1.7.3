@@ -196,8 +196,8 @@ then
 	set MAV_TYPE none
 	set FAILSAFE none
 	set USE_IO no
-	set LOGGER_BUF 14
-
+	set LOGGER_BUF 6
+    # 14
 	if ver hwcmp PX4FMU_V4
 	then
 		param set SYS_FMU_TASK 1
@@ -557,11 +557,11 @@ then
 		then
 			set MAVLINK_F "-r 1200 -d /dev/ttyS1"
 			# Start MAVLink on Wifi (ESP8266 port)
-            echo "mavlink ttyS0 start"
-			mavlink start -r 20000 -b 921600 -d /dev/ttyS0
+#            echo "mavlink ttyS0 start"
+#			mavlink start -r 20000 -b 921600 -d /dev/ttyS0
 
-            echo "mavlink MAVLINK_F = ${CAN_MAVLINK_PORT} start"
-            mavlink start -r 2000 -d ${CAN_MAVLINK_PORT}
+#           echo "mavlink MAVLINK_F = ${CAN_MAVLINK_PORT} start"
+#           mavlink start -r 2000 -d ${CAN_MAVLINK_PORT}
 		fi
 
 		if ver hwcmp AEROFC_V1
@@ -580,7 +580,7 @@ then
 	then
 	else
         echo "mavlink MAVLINK_F = ${MAVLINK_F} start"
-		mavlink start ${MAVLINK_F}
+		mavlink start ${MAVLINK_F} -m magic -r 1000 -f
 	fi
 	unset MAVLINK_F
 
@@ -643,7 +643,7 @@ then
 #	fi
 #	if param compare SYS_COMPANION 3115200
 #	then
-		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 115200 -r 1000 -f
+#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 115200 -r 1000 -f
 #	fi
 #	if param compare SYS_COMPANION 419200
 #	then
@@ -677,7 +677,7 @@ then
 
 	if ver hwcmp PX4FMU_V4
 	then
-		frsky_telemetry start -d /dev/ttyS6
+#		frsky_telemetry start -d /dev/ttyS6
 	fi
 
 	if ver hwcmp MINDPX_V2
@@ -956,6 +956,8 @@ then
 	#
 	navigator start
 
+	rst_mission start
+
 	#
 	# Generic setup (autostart ID not found)
 	#
@@ -1041,9 +1043,12 @@ then
 # End of autostart
 fi
 
+#zb005 start
 # There is no further script processing, so we can free some RAM
 # XXX potentially unset all script variables.
 unset TUNE_ERR
 
 # Boot is complete, inform MAVLink app(s) that the system is now fully up and running
 mavlink boot_complete
+
+swarm_link start

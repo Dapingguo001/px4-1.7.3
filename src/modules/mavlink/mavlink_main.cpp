@@ -325,8 +325,11 @@ Mavlink::Mavlink() :
 		px4_task_exit(1);
 		break;
 	}
-
+	swarm_link_fc_statue_send_sub = orb_subscribe(ORB_ID(rst_swarm_link_fc_statue_send));
 	_rstatus.type = telemetry_status_s::TELEMETRY_STATUS_RADIO_TYPE_GENERIC;
+	
+	memset(swarm_link_fill_byte, 0, sizeof(swarm_link_fill_byte));
+	start_swarm_link_fill_byte = true;
 }
 
 Mavlink::~Mavlink()
@@ -1056,6 +1059,11 @@ Mavlink::send_bytes(const uint8_t *buf, unsigned packet_len)
 
 	/* send message to UART */
 	if (get_protocol() == SERIAL) {
+		if(start_swarm_link_fill_byte)
+		{
+			::write(_uart_fd,swarm_link_fill_byte,sizeof(swarm_link_fill_byte));
+			start_swarm_link_fill_byte = false;
+		}
 		ret = ::write(_uart_fd, buf, packet_len);
 	}
 
@@ -1065,7 +1073,6 @@ Mavlink::send_bytes(const uint8_t *buf, unsigned packet_len)
 		if (_network_buf_len + packet_len < sizeof(_network_buf) / sizeof(_network_buf[0])) {
 			memcpy(&_network_buf[_network_buf_len], buf, packet_len);
 			_network_buf_len += packet_len;
-
 			ret = packet_len;
 		}
 	}
@@ -2396,7 +2403,7 @@ Mavlink::task_main(int argc, char *argv[])
 			orb_copy(ORB_ID(rst_swarm_link_fc_statue_send), 
 						swarm_link_fc_statue_send_sub, &_fc_statue_send);
 
-			mavlink_rst_fc_statue_send.lat = _fc_statue_send.lat;
+			mavlink_rst_fc_statue_send.lat = 1.0f;//_fc_statue_send.lat;
 			mavlink_rst_fc_statue_send.lon = _fc_statue_send.lon;
 			mavlink_rst_fc_statue_send.alt = _fc_statue_send.alt;
 			mavlink_rst_fc_statue_send.relative_alt = _fc_statue_send.relative_alt;
@@ -2408,6 +2415,7 @@ Mavlink::task_main(int argc, char *argv[])
 			mavlink_rst_fc_statue_send.param2 = _fc_statue_send.param2;
 			mavlink_rst_fc_statue_send.param3 = _fc_statue_send.param3;
 			mavlink_rst_fc_statue_send.param4 = _fc_statue_send.param4;
+
 
 			mavlink_msg_rst_fc_statue_send_struct(get_channel(),&mavlink_rst_fc_statue_send);
 		}
