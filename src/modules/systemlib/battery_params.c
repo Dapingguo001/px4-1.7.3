@@ -70,7 +70,7 @@ PARAM_DEFINE_FLOAT(BAT_V_EMPTY, 3.4f);
  * @increment 0.01
  * @reboot_required true
  */
-PARAM_DEFINE_FLOAT(BAT_V_CHARGED, 4.05f);
+PARAM_DEFINE_FLOAT(BAT_V_CHARGED, 4.2f);
 
 /**
  * Low threshold
@@ -180,7 +180,7 @@ PARAM_DEFINE_FLOAT(BAT_R_INTERNAL, -1.0f);
  * @value 16 16S Battery
  * @reboot_required true
  */
-PARAM_DEFINE_INT32(BAT_N_CELLS, 0);
+PARAM_DEFINE_INT32(BAT_N_CELLS, 4);
 
 /**
  * Battery capacity.

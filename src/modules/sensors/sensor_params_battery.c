@@ -41,7 +41,7 @@
  * @group Battery Calibration
  * @decimal 8
  */
-PARAM_DEFINE_FLOAT(BAT_CNT_V_VOLT, -1.0f);
+PARAM_DEFINE_FLOAT(BAT_CNT_V_VOLT, 0.00080566f);
 
 /**
  * Scaling from ADC counts to volt on the ADC input (battery current)
@@ -53,7 +53,7 @@ PARAM_DEFINE_FLOAT(BAT_CNT_V_VOLT, -1.0f);
  * @group Battery Calibration
  * @decimal 8
  */
-PARAM_DEFINE_FLOAT(BAT_CNT_V_CURR, -1.0);
+PARAM_DEFINE_FLOAT(BAT_CNT_V_CURR, 0.00080566f);
 
 /**
  * Offset in volt as seen by the ADC input of the current sensor.
@@ -77,7 +77,7 @@ PARAM_DEFINE_FLOAT(BAT_V_OFFS_CURR, 0.0);
  * @group Battery Calibration
  * @decimal 8
  */
-PARAM_DEFINE_FLOAT(BAT_V_DIV, -1.0);
+PARAM_DEFINE_FLOAT(BAT_V_DIV, 10.10640621);
 
 /**
  * Battery current per volt (A/V)
@@ -89,7 +89,7 @@ PARAM_DEFINE_FLOAT(BAT_V_DIV, -1.0);
  * @group Battery Calibration
  * @decimal 8
  */
-PARAM_DEFINE_FLOAT(BAT_A_PER_V, -1.0);
+PARAM_DEFINE_FLOAT(BAT_A_PER_V, 36.36751556);
 
 /**
  * Battery monitoring source.

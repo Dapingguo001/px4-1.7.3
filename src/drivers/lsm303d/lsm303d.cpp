@@ -71,6 +71,8 @@
 #include <board_config.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include <lib/conversion/rotation.h>
+#include <mathlib/math/butterworthfliter/ButterworthLowPassFliter.hpp>
+
 
 /* SPI protocol address bits */
 #define DIR_READ				(1<<7)
@@ -297,6 +299,11 @@ private:
 	math::LowPassFilter2p	_accel_filter_x;
 	math::LowPassFilter2p	_accel_filter_y;
 	math::LowPassFilter2p	_accel_filter_z;
+
+	math::ButterworthLowPassFliter   _accel_butterworth_fliter_x;
+	math::ButterworthLowPassFliter   _accel_butterworth_fliter_y;
+	math::ButterworthLowPassFliter   _accel_butterworth_fliter_z;
+
 
 	Integrator		_accel_int;
 
@@ -1532,6 +1539,10 @@ LSM303D::measure()
 	float x_in_new = ((xraw_f * _accel_range_scale) - _accel_scale.x_offset) * _accel_scale.x_scale;
 	float y_in_new = ((yraw_f * _accel_range_scale) - _accel_scale.y_offset) * _accel_scale.y_scale;
 	float z_in_new = ((zraw_f * _accel_range_scale) - _accel_scale.z_offset) * _accel_scale.z_scale;
+
+	x_in_new = _accel_butterworth_fliter_x.butterworth_lowpass_fliter(x_in_new,800,30);
+	y_in_new = _accel_butterworth_fliter_y.butterworth_lowpass_fliter(y_in_new,800,30);
+	z_in_new = _accel_butterworth_fliter_z.butterworth_lowpass_fliter(z_in_new,800,30);
 
 	/*
 	  we have logs where the accelerometers get stuck at a fixed

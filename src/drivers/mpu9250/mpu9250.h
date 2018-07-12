@@ -48,6 +48,7 @@
 #include <drivers/drv_mag.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include <lib/conversion/rotation.h>
+#include <mathlib/math/butterworthfliter/ButterworthLowPassFliter.hpp>
 
 #include "mag.h"
 #include "gyro.h"
@@ -333,6 +334,15 @@ private:
 	math::LowPassFilter2p	_gyro_filter_x;
 	math::LowPassFilter2p	_gyro_filter_y;
 	math::LowPassFilter2p	_gyro_filter_z;
+
+	math::ButterworthLowPassFliter   _accel_butterworth_fliter_x;
+	math::ButterworthLowPassFliter   _accel_butterworth_fliter_y;
+	math::ButterworthLowPassFliter   _accel_butterworth_fliter_z;
+
+	math::ButterworthLowPassFliter   _gyro_butterworth_fliter_x;
+	math::ButterworthLowPassFliter   _gyro_butterworth_fliter_y;
+	math::ButterworthLowPassFliter   _gyro_butterworth_fliter_z;
+
 
 	Integrator		_accel_int;
 	Integrator		_gyro_int;

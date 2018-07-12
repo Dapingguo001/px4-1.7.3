@@ -184,7 +184,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_MAX_UP, 3.0f);
  * @max 4.0
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_Z_VEL_MAX_DN, 1.0f);
+PARAM_DEFINE_FLOAT(MPC_Z_VEL_MAX_DN, 2.0f);
 
 /**
  * Proportional gain for horizontal position error
@@ -286,7 +286,7 @@ PARAM_DEFINE_FLOAT(MPC_VEL_MANUAL, 10.0f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_VEL_MAX, 12.0f);
+PARAM_DEFINE_FLOAT(MPC_XY_VEL_MAX, 3.0f);
 
 /**
  * Maximum tilt angle in air

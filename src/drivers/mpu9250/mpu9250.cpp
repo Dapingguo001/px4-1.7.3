@@ -77,6 +77,7 @@
 #include <drivers/drv_mag.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include <lib/conversion/rotation.h>
+#include <mathlib/math/butterworthfliter/ButterworthLowPassFliter.hpp>
 
 #include "mag.h"
 #include "gyro.h"
@@ -1419,6 +1420,10 @@ MPU9250::measure()
 	float y_in_new = ((yraw_f * _accel_range_scale) - _accel_scale.y_offset) * _accel_scale.y_scale;
 	float z_in_new = ((zraw_f * _accel_range_scale) - _accel_scale.z_offset) * _accel_scale.z_scale;
 
+	x_in_new = _accel_butterworth_fliter_x.butterworth_lowpass_fliter(x_in_new,1000,30);
+	y_in_new = _accel_butterworth_fliter_y.butterworth_lowpass_fliter(y_in_new,1000,30);
+	z_in_new = _accel_butterworth_fliter_z.butterworth_lowpass_fliter(z_in_new,1000,30);
+
 	arb.x = _accel_filter_x.apply(x_in_new);
 	arb.y = _accel_filter_y.apply(y_in_new);
 	arb.z = _accel_filter_z.apply(z_in_new);
@@ -1456,6 +1461,10 @@ MPU9250::measure()
 	float x_gyro_in_new = ((xraw_f * _gyro_range_scale) - _gyro_scale.x_offset) * _gyro_scale.x_scale;
 	float y_gyro_in_new = ((yraw_f * _gyro_range_scale) - _gyro_scale.y_offset) * _gyro_scale.y_scale;
 	float z_gyro_in_new = ((zraw_f * _gyro_range_scale) - _gyro_scale.z_offset) * _gyro_scale.z_scale;
+
+	x_gyro_in_new = _gyro_butterworth_fliter_x.butterworth_lowpass_fliter(x_gyro_in_new,1000,30);
+	y_gyro_in_new = _gyro_butterworth_fliter_y.butterworth_lowpass_fliter(y_gyro_in_new,1000,30);
+	z_gyro_in_new = _gyro_butterworth_fliter_z.butterworth_lowpass_fliter(z_gyro_in_new,1000,30);
 
 	grb.x = _gyro_filter_x.apply(x_gyro_in_new);
 	grb.y = _gyro_filter_y.apply(y_gyro_in_new);

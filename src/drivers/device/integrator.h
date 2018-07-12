@@ -47,7 +47,7 @@
 class Integrator
 {
 public:
-	Integrator(uint64_t auto_reset_interval = 4000 /* 250 Hz */, bool coning_compensation = false);
+	Integrator(uint64_t auto_reset_interval = 2500 /* 250 Hz */, bool coning_compensation = false);
 	virtual ~Integrator();
 
 	/**
