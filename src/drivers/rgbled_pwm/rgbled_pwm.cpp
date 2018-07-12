@@ -240,6 +240,18 @@ RGBLED_PWM::led()
 			_r = 255; _g = 255; _b = 255;
 			break;
 
+		case led_control_s::COLOR_PINK:
+			_r = 235; _g = 115; _b = 229;
+			break;
+		
+		case led_control_s::COLOR_WATHET:
+			_r = 104; _g = 236; _b = 246;
+			break;
+
+		case led_control_s::COLOR_LIGHT_YELLOW:
+			_r = 246; _g = 222; _b = 174;
+			break;
+
 		default: // led_control_s::COLOR_OFF
 			_r = 0; _g = 0; _b = 0;
 			break;

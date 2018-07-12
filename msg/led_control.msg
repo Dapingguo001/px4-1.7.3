@@ -12,6 +12,10 @@ uint8 COLOR_AMBER = 6
 uint8 COLOR_CYAN = 7
 uint8 COLOR_WHITE = 8
 
+uint8 COLOR_PINK = 9
+uint8 COLOR_WATHET = 10
+uint8 COLOR_LIGHT_YELLOW = 11
+
 # LED modes definitions
 uint8 MODE_OFF = 0 # turn LED off
 uint8 MODE_ON = 1  # turn LED on

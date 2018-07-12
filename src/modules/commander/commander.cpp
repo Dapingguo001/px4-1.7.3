@@ -3247,6 +3247,18 @@ Commander::run()
 			{
 				swarm_link_led_color = led_control_s::COLOR_CYAN;
 			}
+			else if(_light_control_receive.red == 235 && _light_control_receive.green == 115 && _light_control_receive.blue == 229)
+			{
+				swarm_link_led_color = led_control_s::COLOR_PINK;
+			}
+			else if(_light_control_receive.red == 104 && _light_control_receive.green == 236 && _light_control_receive.blue == 246)
+			{
+				swarm_link_led_color = led_control_s::COLOR_WATHET;
+			}
+			else if(_light_control_receive.red == 246 && _light_control_receive.green == 222 && _light_control_receive.blue == 174)
+			{
+				swarm_link_led_color = led_control_s::COLOR_LIGHT_YELLOW;
+			}
 			else
 			{
 				swarm_link_led_color = led_control_s::COLOR_WHITE;
@@ -3315,7 +3327,23 @@ Commander::run()
 			}
 			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 6)
 			{
+				swarm_link_led_color = led_control_s::COLOR_AMBER;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 7)
+			{
 				swarm_link_led_color = led_control_s::COLOR_CYAN;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 8)
+			{
+				swarm_link_led_color = led_control_s::COLOR_PINK;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 9)
+			{
+				swarm_link_led_color = led_control_s::COLOR_WATHET;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 10)
+			{
+				swarm_link_led_color = led_control_s::COLOR_LIGHT_YELLOW;
 			}
 			else
 			{
