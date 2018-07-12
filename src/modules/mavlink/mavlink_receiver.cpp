@@ -84,6 +84,7 @@
 #include <geo/geo.h>
 
 #include <uORB/topics/vehicle_command_ack.h>
+#include <uORB/topics/home_position.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_receiver.h"
@@ -145,6 +146,7 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_swarm_link_fc_statue_receive_pub(nullptr),
 	_control_mode_sub(orb_subscribe(ORB_ID(vehicle_control_mode))),
 	_actuator_armed_sub(orb_subscribe(ORB_ID(actuator_armed))),
+	_home_sub(orb_subscribe(ORB_ID(home_position))),
 	_global_ref_timestamp(0),
 	_hil_frames(0),
 	_old_timestamp(0),
@@ -163,8 +165,15 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_p_bat_crit_thr(param_find("BAT_CRIT_THR")),
 	_p_bat_low_thr(param_find("BAT_LOW_THR"))
 {
+	memset(&_light_control_receive, 0, sizeof(_light_control_receive));
+	memset(&_fc_statue_receive, 0, sizeof(_fc_statue_receive));
+	memset(&_broadcast_light_control_receive, 0, sizeof(_broadcast_light_control_receive));
+	
 	_swarm_link_light_control_receive_pub = orb_advertise(ORB_ID(rst_swarm_link_light_control_receive), &_light_control_receive);
 	_swarm_link_fc_statue_receive_pub = orb_advertise(ORB_ID(rst_swarm_link_fc_statue_receive), &_fc_statue_receive);
+	_swarm_link_broadcast_light_control_receive_pub = 
+						orb_advertise(ORB_ID(rst_swarm_link_broadcast_light_control_receive), &_broadcast_light_control_receive);
+
 
 }
 
@@ -172,6 +181,7 @@ MavlinkReceiver::~MavlinkReceiver()
 {
 	orb_unsubscribe(_control_mode_sub);
 	orb_unsubscribe(_actuator_armed_sub);
+	orb_unsubscribe(_home_sub);
 }
 
 void MavlinkReceiver::acknowledge(uint8_t sysid, uint8_t compid, uint16_t command, uint8_t result)
@@ -350,6 +360,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 	case MAVLINK_MSG_ID_RST_FC_STATUE:
 		handle_message_rst_fc_statue(msg);
 		break;
+	
+	case MAVLINK_MSG_ID_RST_BROADCAST_LIGHT_CONTROL:
+		handle_message_rst_broadcast_light_control(msg);
+		break;
 
 	default:
 		break;
@@ -452,6 +466,12 @@ MavlinkReceiver::send_flight_information()
 void
 MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 {
+	bool updated;
+	orb_check(_home_sub, &updated);
+
+	if (updated) {
+		orb_copy(ORB_ID(home_position), _home_sub, &_home);
+	}
 	/* command */
 	mavlink_command_long_t cmd_mavlink;
 	mavlink_msg_command_long_decode(msg, &cmd_mavlink);
@@ -465,7 +485,7 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 		.param2 = cmd_mavlink.param2,
 		.param3 = cmd_mavlink.param3,
 		.param4 = cmd_mavlink.param4,
-		.param7 = cmd_mavlink.param7,
+		.param7 = cmd_mavlink.param7 + _home.alt,
 		.command = cmd_mavlink.command,
 		.target_system = cmd_mavlink.target_system,
 		.target_component = cmd_mavlink.target_component,
@@ -1547,7 +1567,70 @@ MavlinkReceiver::handle_message_rst_fc_statue(mavlink_message_t *msg)
 	orb_publish(ORB_ID(rst_swarm_link_fc_statue_receive), 
 						_swarm_link_fc_statue_receive_pub, &_fc_statue_receive);
 }
+void
+MavlinkReceiver::handle_message_rst_broadcast_light_control(mavlink_message_t *msg)
+{
+	mavlink_rst_broadcast_light_control_t broadcastcast_light_control;
+	mavlink_msg_rst_broadcast_light_control_decode(msg, &broadcastcast_light_control);
+	_broadcast_light_control_receive.number[0] = broadcastcast_light_control.number1;
+	_broadcast_light_control_receive.number[1] = broadcastcast_light_control.number2;
+	_broadcast_light_control_receive.number[2] = broadcastcast_light_control.number3;
+	_broadcast_light_control_receive.number[3] = broadcastcast_light_control.number4;
+	_broadcast_light_control_receive.number[4] = broadcastcast_light_control.number5;
+	_broadcast_light_control_receive.number[5] = broadcastcast_light_control.number6;
+	_broadcast_light_control_receive.number[6] = broadcastcast_light_control.number7;
+	_broadcast_light_control_receive.number[7] = broadcastcast_light_control.number8;
+	_broadcast_light_control_receive.number[8] = broadcastcast_light_control.number9;
+	_broadcast_light_control_receive.number[9] = broadcastcast_light_control.number10;
 
+	_broadcast_light_control_receive.number[10] = broadcastcast_light_control.number11;
+	_broadcast_light_control_receive.number[11] = broadcastcast_light_control.number12;
+	_broadcast_light_control_receive.number[12] = broadcastcast_light_control.number13;
+	_broadcast_light_control_receive.number[13] = broadcastcast_light_control.number14;
+	_broadcast_light_control_receive.number[14] = broadcastcast_light_control.number15;
+	_broadcast_light_control_receive.number[15] = broadcastcast_light_control.number16;
+	_broadcast_light_control_receive.number[16] = broadcastcast_light_control.number17;
+	_broadcast_light_control_receive.number[17] = broadcastcast_light_control.number18;
+	_broadcast_light_control_receive.number[18] = broadcastcast_light_control.number19;
+	_broadcast_light_control_receive.number[19] = broadcastcast_light_control.number20;
+
+	_broadcast_light_control_receive.number[20] = broadcastcast_light_control.number21;
+	_broadcast_light_control_receive.number[21] = broadcastcast_light_control.number22;
+	_broadcast_light_control_receive.number[22] = broadcastcast_light_control.number23;
+	_broadcast_light_control_receive.number[23] = broadcastcast_light_control.number24;
+	_broadcast_light_control_receive.number[24] = broadcastcast_light_control.number25;
+	_broadcast_light_control_receive.number[25] = broadcastcast_light_control.number26;
+	_broadcast_light_control_receive.number[26] = broadcastcast_light_control.number27;
+	_broadcast_light_control_receive.number[27] = broadcastcast_light_control.number28;
+	_broadcast_light_control_receive.number[28] = broadcastcast_light_control.number29;
+	_broadcast_light_control_receive.number[29] = broadcastcast_light_control.number30;
+
+	_broadcast_light_control_receive.number[30] = broadcastcast_light_control.number31;
+	_broadcast_light_control_receive.number[31] = broadcastcast_light_control.number32;
+	_broadcast_light_control_receive.number[32] = broadcastcast_light_control.number33;
+	_broadcast_light_control_receive.number[33] = broadcastcast_light_control.number34;
+	_broadcast_light_control_receive.number[34] = broadcastcast_light_control.number35;
+	_broadcast_light_control_receive.number[35] = broadcastcast_light_control.number36;
+	_broadcast_light_control_receive.number[36] = broadcastcast_light_control.number37;
+	_broadcast_light_control_receive.number[37] = broadcastcast_light_control.number38;
+	_broadcast_light_control_receive.number[38] = broadcastcast_light_control.number39;
+	_broadcast_light_control_receive.number[39] = broadcastcast_light_control.number40;
+
+	_broadcast_light_control_receive.number[40] = broadcastcast_light_control.number41;
+	_broadcast_light_control_receive.number[41] = broadcastcast_light_control.number42;
+	_broadcast_light_control_receive.number[42] = broadcastcast_light_control.number43;
+	_broadcast_light_control_receive.number[43] = broadcastcast_light_control.number44;
+	_broadcast_light_control_receive.number[44] = broadcastcast_light_control.number45;
+	_broadcast_light_control_receive.number[45] = broadcastcast_light_control.number46;
+	_broadcast_light_control_receive.number[46] = broadcastcast_light_control.number47;
+	_broadcast_light_control_receive.number[47] = broadcastcast_light_control.number48;
+	_broadcast_light_control_receive.number[48] = broadcastcast_light_control.number49;
+	_broadcast_light_control_receive.number[49] = broadcastcast_light_control.number50;
+
+	orb_publish(ORB_ID(rst_swarm_link_broadcast_light_control_receive), 
+			_swarm_link_broadcast_light_control_receive_pub, &_broadcast_light_control_receive);
+
+}
 
 switch_pos_t
 MavlinkReceiver::decode_switch_pos(uint16_t buttons, unsigned sw)

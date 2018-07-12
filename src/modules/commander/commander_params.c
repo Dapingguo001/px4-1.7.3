@@ -711,3 +711,13 @@ PARAM_DEFINE_INT32(COM_FLIGHT_UUID, 0);
  * @group Mission
  */
 PARAM_DEFINE_INT32(COM_TAKEOFF_ACT, 0);
+
+/**
+ * swarm link node number
+ * @group Commander
+ * @min 0
+ * @max 2000
+ * @decimal 0
+ * @increment 1
+ */
+ PARAM_DEFINE_INT32(RST_NODE_NUM, 0);

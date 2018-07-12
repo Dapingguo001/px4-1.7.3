@@ -131,6 +131,8 @@ set(msg_files
 	rst_swarm_link_fc_statue_send.msg
 	rst_swarm_link_light_control_component.msg
 
+	rst_swarm_link_broadcast_light_control_receive.msg
+
 	)
 
 px4_add_git_submodule(TARGET git_gencpp PATH tools/gencpp)

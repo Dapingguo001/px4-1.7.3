@@ -122,6 +122,7 @@
 #include <uORB/topics/vtol_vehicle_status.h>
 #include <uORB/topics/estimator_status.h>
 #include <uORB/topics/rst_swarm_link_light_control_receive.h>
+#include <uORB/topics/rst_swarm_link_broadcast_light_control_receive.h>
 
 typedef enum VEHICLE_MODE_FLAG
 {
@@ -1313,6 +1314,7 @@ Commander::run()
 	/* failsafe response to loss of navigation accuracy */
 	param_t _param_posctl_nav_loss_act = param_find("COM_POSCTL_NAVL");
 
+	param_t _param_swarm_link_node_number = param_find("RST_NODE_NUM");
 	/* pthread for slow low prio thread */
 	pthread_t commander_low_prio_thread;
 
@@ -1584,6 +1586,11 @@ Commander::run()
 	uint8_t swarm_link_led_mode = 0;
 	uint8_t swarm_link_led_color = 0;
 
+	int _swarm_link_broadcast_light_control_receive_sub = orb_subscribe(ORB_ID(rst_swarm_link_broadcast_light_control_receive));
+	struct rst_swarm_link_broadcast_light_control_receive_s _broadcast_light_control_receive;
+	memset(&_broadcast_light_control_receive.number, 0, sizeof(_broadcast_light_control_receive.number));
+	int node_number;
+
 	bool swarm_link_led_to_state_led = false;
 
 	control_status_leds(&status, &armed, true, &battery, &cpuload);
@@ -1672,6 +1679,8 @@ Commander::run()
 	int32_t rc_override = 0;
 
 	int32_t takeoff_complete_act = 0;
+
+	int32_t swarm_link_node_num = 0;
 
 	/* Thresholds for engine failure detection */
 	float ef_throttle_thres = 1.0f;
@@ -1823,6 +1832,8 @@ Commander::run()
 			param_get(_param_posctl_nav_loss_act, &posctl_nav_loss_act);
 
 			param_get(_param_takeoff_finished_action, &takeoff_complete_act);
+
+			param_get(_param_swarm_link_node_number, &swarm_link_node_num);
 
 			param_init_forced = false;
 		}
@@ -3206,6 +3217,8 @@ Commander::run()
         {
             orb_copy(ORB_ID(rst_swarm_link_light_control_receive), 
 						_swarm_link_light_control_receive_sub, &_light_control_receive);
+
+			memset(&_broadcast_light_control_receive, 0, sizeof(_broadcast_light_control_receive));
 		}
 		
 		if(((_light_control_receive.state >> 7) & 0x01) ==1)
@@ -3262,6 +3275,76 @@ Commander::run()
 			}
 		}
 
+		orb_check(_swarm_link_broadcast_light_control_receive_sub, &updated);
+        if(updated)
+        {
+            orb_copy(ORB_ID(rst_swarm_link_broadcast_light_control_receive), 
+					_swarm_link_broadcast_light_control_receive_sub, &_broadcast_light_control_receive);
+
+			memset(&_light_control_receive, 0, sizeof(_light_control_receive));
+		}
+		if(((_broadcast_light_control_receive.number[swarm_link_node_num - 1] >> 7) & 0x01) == 1)
+		{
+			if(swarm_link_node_num <51)
+			{
+				node_number = swarm_link_node_num - 1;
+			}
+			else
+			{
+				node_number = swarm_link_node_num - 51;
+			}
+			if((_broadcast_light_control_receive.number[node_number] & 0x07) == 1)
+			{
+				swarm_link_led_color = led_control_s::COLOR_RED;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 2)
+			{
+				swarm_link_led_color = led_control_s::COLOR_GREEN;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 3)
+			{
+				swarm_link_led_color = led_control_s::COLOR_BLUE;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 4)
+			{
+				swarm_link_led_color = led_control_s::COLOR_YELLOW;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 5)
+			{
+				swarm_link_led_color = led_control_s::COLOR_PURPLE;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 6)
+			{
+				swarm_link_led_color = led_control_s::COLOR_CYAN;
+			}
+			else
+			{
+				swarm_link_led_color = led_control_s::COLOR_WHITE;
+			}
+
+			if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 1)
+			{
+				swarm_link_led_mode = led_control_s::MODE_ON;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 2)
+			{
+				swarm_link_led_mode = led_control_s::MODE_BLINK_NORMAL;
+			}
+			else
+			{
+				swarm_link_led_mode = led_control_s::MODE_OFF;
+			}
+			swarm_link_led_to_state_led = true;
+			rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
+		}
+		else
+		{
+			if(swarm_link_led_to_state_led)
+			{
+				swarm_link_led_to_state_led = false;
+				status_changed = true;
+			}
+		}
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
 	}

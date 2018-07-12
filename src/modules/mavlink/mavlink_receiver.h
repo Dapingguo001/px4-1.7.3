@@ -80,6 +80,8 @@
 #include <uORB/topics/rst_dev_cmd.h>
 #include <uORB/topics/rst_swarm_link_light_control_receive.h>
 #include <uORB/topics/rst_swarm_link_fc_statue_receive.h>
+#include <uORB/topics/rst_swarm_link_broadcast_light_control_receive.h>
+#include <uORB/topics/home_position.h>
 
 
 #include "mavlink_mission.h"
@@ -169,6 +171,7 @@ private:
 
 	void handle_message_rst_light_control(mavlink_message_t *msg);
 	void handle_message_rst_fc_statue(mavlink_message_t *msg);
+	void handle_message_rst_broadcast_light_control(mavlink_message_t *msg);
 
 	/**
 	 * Set the interval at which the given message stream is published.
@@ -258,9 +261,14 @@ private:
 	orb_advert_t _command_ack_pub;
 	orb_advert_t _swarm_link_light_control_receive_pub;
 	orb_advert_t _swarm_link_fc_statue_receive_pub;
+	orb_advert_t _swarm_link_broadcast_light_control_receive_pub;
+
 
 	int _control_mode_sub;
 	int _actuator_armed_sub;
+
+	int _home_sub;
+
 	uint64_t _global_ref_timestamp;
 	int _hil_frames;
 	uint64_t _old_timestamp;
@@ -273,6 +281,10 @@ private:
 
 	struct rst_swarm_link_fc_statue_receive_s _fc_statue_receive;
 	struct rst_swarm_link_light_control_receive_s _light_control_receive;
+
+	struct rst_swarm_link_broadcast_light_control_receive_s _broadcast_light_control_receive;
+
+	struct home_position_s _home = {};
 
 	double _time_offset_avg_alpha;
 	int64_t _time_offset;
