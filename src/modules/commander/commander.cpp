@@ -1592,6 +1592,8 @@ Commander::run()
 	int node_number;
 
 	bool swarm_link_led_to_state_led = false;
+	uint16_t rand_color_count = 0;
+	uint8_t  rand_color = 0;
 
 	control_status_leds(&status, &armed, true, &battery, &cpuload);
 
@@ -3305,43 +3307,44 @@ Commander::run()
 			{
 				node_number = swarm_link_node_num - 51;
 			}
-			if((_broadcast_light_control_receive.number[node_number] & 0x07) == 1)
+
+			if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 1)
 			{
 				swarm_link_led_color = led_control_s::COLOR_RED;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 2)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 2)
 			{
 				swarm_link_led_color = led_control_s::COLOR_GREEN;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 3)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 3)
 			{
 				swarm_link_led_color = led_control_s::COLOR_BLUE;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 4)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 4)
 			{
 				swarm_link_led_color = led_control_s::COLOR_YELLOW;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 5)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 5)
 			{
 				swarm_link_led_color = led_control_s::COLOR_PURPLE;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 6)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 6)
 			{
 				swarm_link_led_color = led_control_s::COLOR_AMBER;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 7)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 7)
 			{
 				swarm_link_led_color = led_control_s::COLOR_CYAN;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 8)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 8)
 			{
 				swarm_link_led_color = led_control_s::COLOR_PINK;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 9)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 9)
 			{
 				swarm_link_led_color = led_control_s::COLOR_WATHET;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x07) == 10)
+			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 10)
 			{
 				swarm_link_led_color = led_control_s::COLOR_LIGHT_YELLOW;
 			}
@@ -3357,6 +3360,28 @@ Commander::run()
 			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 2)
 			{
 				swarm_link_led_mode = led_control_s::MODE_BLINK_NORMAL;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 3)
+			{
+				if(rand_color_count < 49)
+				{
+					swarm_link_led_color = rand_color;
+					swarm_link_led_mode = led_control_s::MODE_ON;
+				}
+				else if(rand_color_count == 49)
+				{
+					rand_color = rand()%(11-1+1)+1;
+				}
+				else
+				{
+					swarm_link_led_mode = led_control_s::MODE_OFF;
+				}
+				
+				rand_color_count++;
+				if(rand_color_count == 100)
+				{
+					rand_color_count = 0;
+				}
 			}
 			else
 			{

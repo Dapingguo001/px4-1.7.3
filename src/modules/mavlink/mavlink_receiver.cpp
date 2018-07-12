@@ -1572,6 +1572,7 @@ MavlinkReceiver::handle_message_rst_broadcast_light_control(mavlink_message_t *m
 {
 	mavlink_rst_broadcast_light_control_t broadcastcast_light_control;
 	mavlink_msg_rst_broadcast_light_control_decode(msg, &broadcastcast_light_control);
+	
 	_broadcast_light_control_receive.number[0] = broadcastcast_light_control.number1;
 	_broadcast_light_control_receive.number[1] = broadcastcast_light_control.number2;
 	_broadcast_light_control_receive.number[2] = broadcastcast_light_control.number3;
