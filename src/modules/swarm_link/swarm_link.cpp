@@ -21,6 +21,8 @@
 
 #include <uORB/topics/led_control.h>
 
+#include <uORB/topics/vehicle_local_position.h>
+
 #include <drivers/drv_led.h>
 #include "swarm_link.h"
 
@@ -104,6 +106,7 @@ Swarm_Link::task_main()
     _vehicle_gps_position_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
     _home_position_sub = orb_subscribe(ORB_ID(home_position));
     _battery_status_sub = orb_subscribe(ORB_ID(battery_status));
+    _local_position_sub = orb_subscribe(ORB_ID(vehicle_local_position));
 
     //公告消息
 //    led_control_pub = orb_advertise(ORB_ID(led_control), &_led_control);
@@ -114,6 +117,7 @@ Swarm_Link::task_main()
     _swarm_link_fc_statue_send_sub = orb_advertise(ORB_ID(rst_swarm_link_fc_statue_send), 
                                         &_fc_statue_send);
                                 
+    memset(&_fc_statue_send,0,sizeof(_fc_statue_send));
 
     while(!_task_should_exit)
     {
@@ -122,6 +126,12 @@ Swarm_Link::task_main()
         if(updated)
         {
             orb_copy(ORB_ID(vehicle_gps_position), _vehicle_gps_position_sub, &_gps_position);
+        }
+
+        orb_check(_local_position_sub, &updated);
+        if(updated)
+        {
+            orb_copy(ORB_ID(vehicle_local_position), _local_position_sub, &_local_position);
         }
 
         orb_check(_home_position_sub, &updated);
@@ -146,41 +156,41 @@ Swarm_Link::task_main()
             {
                 if(_gps_position.fix_type == 6)
                 {
-                    _fc_statue_receive.fix_type = 3;
+                    _fc_statue_send.fix_type = 3;
                 }
                 else if(_gps_position.fix_type == 5)
                 {
-                    _fc_statue_receive.fix_type = 2;
+                    _fc_statue_send.fix_type = 2;
                 }
                 else if(_gps_position.fix_type == 4)
                 {
-                    _fc_statue_receive.fix_type = 1;
+                    _fc_statue_send.fix_type = 1;
                 }
                 else
                 {
-                    _fc_statue_receive.fix_type = 0;
+                    _fc_statue_send.fix_type = 0;
                 }
-                _fc_statue_receive.lat = _gps_position.lat;
-                _fc_statue_receive.lon = _gps_position.lon;
-                _fc_statue_receive.alt = _gps_position.alt;
-                _fc_statue_receive.relative_alt = _gps_position.alt - (int32_t)(_home_position.alt * 1E3f);
-                _fc_statue_receive.voltage_battery = (uint16_t)(_battery_status.voltage_filtered_v * 1E2f);
-                _fc_statue_receive.battery_remaining = (uint8_t)(_battery_status.remaining * 100);//百分治
+                _fc_statue_send.lat = _gps_position.lat;
+                _fc_statue_send.lon = _gps_position.lon;
+                _fc_statue_send.alt = (int32_t)(_local_position.z * 1E3f);
+                _fc_statue_send.relative_alt = (int32_t)((_local_position.z - _home_position.alt) * 1E3f);
+                _fc_statue_send.voltage_battery = (uint16_t)(_battery_status.voltage_filtered_v * 1E2f);
+                _fc_statue_send.battery_remaining = (uint8_t)(_battery_status.remaining * 100);//百分治
 
                 if(calibration_id)
                 {
-                    _fc_statue_receive.param_index = 1;
+                    _fc_statue_send.param_index = 1;
                 }
                 else
                 {
-                    _fc_statue_receive.param_index = 0;
+                    _fc_statue_send.param_index = 0;
                 }
-                _fc_statue_receive.param1 = 0;
-                _fc_statue_receive.param2 = 0;
-                _fc_statue_receive.param3 = 0;
-                _fc_statue_receive.param4 = 0;
+                _fc_statue_send.param1 = 0;
+                _fc_statue_send.param2 = 0;
+                _fc_statue_send.param3 = 0;
+                _fc_statue_send.param4 = 0;
                 orb_publish(ORB_ID(rst_swarm_link_fc_statue_send), _swarm_link_fc_statue_send_sub,
-                             &_fc_statue_receive);
+                             &_fc_statue_send);
             }
         }        
 

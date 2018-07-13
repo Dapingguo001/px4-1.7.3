@@ -1059,11 +1059,20 @@ Mavlink::send_bytes(const uint8_t *buf, unsigned packet_len)
 
 	/* send message to UART */
 	if (get_protocol() == SERIAL) {
-		if(start_swarm_link_fill_byte)
+/*		if(start_swarm_link_fill_byte)
 		{
-			::write(_uart_fd,swarm_link_fill_byte,sizeof(swarm_link_fill_byte));
-			start_swarm_link_fill_byte = false;
-		}
+			for(swarm_link_fill_byte_number = 0;swarm_link_fill_byte_number < sizeof(swarm_link_fill_byte);swarm_link_fill_byte_number++)
+			{
+				::write(_uart_fd,&swarm_link_fill_byte[swarm_link_fill_byte_number],1);
+				if(swarm_link_fill_byte_number == sizeof(swarm_link_fill_byte))
+				{
+					start_swarm_link_fill_byte = false;
+				}
+				usleep(5000);
+			}
+			
+		}*/
+//		::printf("yuwenbin...uart....send...test\n");
 		ret = ::write(_uart_fd, buf, packet_len);
 	}
 
@@ -2403,7 +2412,7 @@ Mavlink::task_main(int argc, char *argv[])
 			orb_copy(ORB_ID(rst_swarm_link_fc_statue_send), 
 						swarm_link_fc_statue_send_sub, &_fc_statue_send);
 
-			mavlink_rst_fc_statue_send.lat = 1.0f;//_fc_statue_send.lat;
+			mavlink_rst_fc_statue_send.lat = _fc_statue_send.lat;
 			mavlink_rst_fc_statue_send.lon = _fc_statue_send.lon;
 			mavlink_rst_fc_statue_send.alt = _fc_statue_send.alt;
 			mavlink_rst_fc_statue_send.relative_alt = _fc_statue_send.relative_alt;
@@ -2415,8 +2424,7 @@ Mavlink::task_main(int argc, char *argv[])
 			mavlink_rst_fc_statue_send.param2 = _fc_statue_send.param2;
 			mavlink_rst_fc_statue_send.param3 = _fc_statue_send.param3;
 			mavlink_rst_fc_statue_send.param4 = _fc_statue_send.param4;
-
-
+//			::printf("yuwenbin....test...send\n");
 			mavlink_msg_rst_fc_statue_send_struct(get_channel(),&mavlink_rst_fc_statue_send);
 		}
 

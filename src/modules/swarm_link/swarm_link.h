@@ -5,7 +5,7 @@
 #include <uORB/topics/home_position.h>
 #include <uORB/topics/battery_status.h>
 #include <uORB/topics/rst_swarm_link_fc_statue_send.h>
-
+#include <uORB/topics/vehicle_local_position.h>
 #include <systemlib/param/param.h>
 
 
@@ -28,6 +28,7 @@ public:
     int _vehicle_gps_position_sub{-1};
     int _home_position_sub{-1};
     int _battery_status_sub{-1};
+    int _local_position_sub{-1};
 
 
     struct rst_swarm_link_fc_statue_receive_s  _fc_statue_receive;
@@ -36,14 +37,17 @@ public:
     struct home_position_s _home_position;
     struct battery_status_s _battery_status;
 
+    struct vehicle_local_position_s _local_position;
+
 
     orb_advert_t led_control_pub = nullptr;
     orb_advert_t light_control_component_pub = nullptr;
     orb_advert_t _swarm_link_fc_statue_send_sub = nullptr;
 
-    led_control_s                               _led_control;
-    rst_swarm_link_light_control_component_s    _light_control_component;
-    rst_swarm_link_fc_statue_send_s             _fc_statue_send;
+
+    struct led_control_s                               _led_control;
+    struct rst_swarm_link_light_control_component_s    _light_control_component;
+    struct rst_swarm_link_fc_statue_send_s             _fc_statue_send;
 
 private:
 

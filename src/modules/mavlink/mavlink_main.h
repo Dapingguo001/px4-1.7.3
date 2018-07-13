@@ -555,7 +555,7 @@ private:
 	uint64_t		_mavlink_start_time;
 	int32_t			_protocol_version_switch;
 	int32_t			_protocol_version;
-	uint8_t         swarm_link_fill_byte[1230];
+	uint8_t         swarm_link_fill_byte[1500];
 	bool            start_swarm_link_fill_byte;
 	unsigned		_bytes_tx;
 	unsigned		_bytes_txerr;
@@ -564,6 +564,8 @@ private:
 	float			_rate_tx;
 	float			_rate_txerr;
 	float			_rate_rx;
+
+	int32_t swarm_link_fill_byte_number = 0;
 
 #ifdef __PX4_POSIX
 	struct sockaddr_in _myaddr;
