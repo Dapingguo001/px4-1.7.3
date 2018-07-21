@@ -639,7 +639,7 @@ then
 #	fi
 #	if param compare SYS_COMPANION 357600
 #	then
-#		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -r 1000 -f
+		mavlink start -d ${MAVLINK_COMPANION_DEVICE} -b 57600 -r 1000 -f
 #	fi
 #	if param compare SYS_COMPANION 3115200
 #	then

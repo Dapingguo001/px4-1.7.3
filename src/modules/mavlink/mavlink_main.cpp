@@ -248,6 +248,7 @@ Mavlink::Mavlink() :
 	_rate_tx(0.0f),
 	_rate_txerr(0.0f),
 	_rate_rx(0.0f),
+	_swarm_link_uart_fd(-1),
 #ifdef __PX4_POSIX
 	_myaddr {},
 	_src_addr{},
@@ -328,8 +329,6 @@ Mavlink::Mavlink() :
 	swarm_link_fc_statue_send_sub = orb_subscribe(ORB_ID(rst_swarm_link_fc_statue_send));
 	_rstatus.type = telemetry_status_s::TELEMETRY_STATUS_RADIO_TYPE_GENERIC;
 	
-	memset(swarm_link_fill_byte, 0, sizeof(swarm_link_fill_byte));
-	start_swarm_link_fill_byte = true;
 }
 
 Mavlink::~Mavlink()
@@ -772,6 +771,11 @@ int Mavlink::mavlink_open_uart(int baud, const char *uart_name)
 	/* open uart */
 	_uart_fd = ::open(uart_name, O_RDWR | O_NOCTTY);
 
+	if(!(strcmp(uart_name,"/dev/ttyS1")))
+	{
+		_swarm_link_uart_fd = _uart_fd;
+	}
+
 	/* if this is a config link, stay here and wait for it to open */
 	if (_uart_fd < 0 && _mode == MAVLINK_MODE_CONFIG) {
 
@@ -889,6 +893,11 @@ Mavlink::enable_flow_control(bool enabled)
 	} else {
 		uart_config.c_cflag &= ~CRTSCTS;
 
+	}
+
+	if(_swarm_link_uart_fd == _uart_fd)
+	{
+		uart_config.c_cflag &= ~CRTSCTS;
 	}
 
 	ret = tcsetattr(_uart_fd, TCSANOW, &uart_config);

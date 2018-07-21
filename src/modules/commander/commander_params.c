@@ -205,7 +205,7 @@ PARAM_DEFINE_FLOAT(COM_RC_STICK_OV, 12.0f);
  * @decimal 2
  * @increment 0.5
  */
-PARAM_DEFINE_FLOAT(COM_HOME_H_T, 5.0f);
+PARAM_DEFINE_FLOAT(COM_HOME_H_T, 15.0f);
 
 /**
  * Home set vertical threshold
@@ -219,7 +219,7 @@ PARAM_DEFINE_FLOAT(COM_HOME_H_T, 5.0f);
  * @decimal 2
  * @increment 0.5
  */
-PARAM_DEFINE_FLOAT(COM_HOME_V_T, 10.0f);
+PARAM_DEFINE_FLOAT(COM_HOME_V_T, 25.0f);
 
 /**
  * RC control input mode

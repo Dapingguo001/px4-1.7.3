@@ -1586,6 +1586,9 @@ Commander::run()
 	uint8_t swarm_link_led_mode = 0;
 	uint8_t swarm_link_led_color = 0;
 
+	uint8_t last_swarm_link_led_mode = 0;
+	uint8_t last_swarm_link_led_color = 0;
+
 	int _swarm_link_broadcast_light_control_receive_sub = orb_subscribe(ORB_ID(rst_swarm_link_broadcast_light_control_receive));
 	struct rst_swarm_link_broadcast_light_control_receive_s _broadcast_light_control_receive;
 	memset(&_broadcast_light_control_receive.number, 0, sizeof(_broadcast_light_control_receive.number));
@@ -1594,6 +1597,8 @@ Commander::run()
 	bool swarm_link_led_to_state_led = false;
 	uint16_t rand_color_count = 0;
 	uint8_t  rand_color = 0;
+	bool led_status_shut_down = false;
+
 
 	control_status_leds(&status, &armed, true, &battery, &cpuload);
 
@@ -3197,12 +3202,12 @@ Commander::run()
 			/* blinking LED message, don't touch LEDs */
 			if (blink_state == 2) {
 				/* blinking LED message completed, restore normal state */
-				control_status_leds(&status, &armed, true, &battery, &cpuload);
+				control_status_leds(&status, &armed, true & !led_status_shut_down, &battery, &cpuload);
 			}
 
 		} else {
 			/* normal state */
-			control_status_leds(&status, &armed, status_changed, &battery, &cpuload);
+			control_status_leds(&status, &armed, status_changed & !led_status_shut_down, &battery, &cpuload);
 		}
 
 		status_changed = false;
@@ -3278,7 +3283,12 @@ Commander::run()
 				swarm_link_led_mode = led_control_s::MODE_OFF;
 			}
 			swarm_link_led_to_state_led = true;
-			rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
+			if((last_swarm_link_led_mode != swarm_link_led_mode) || (last_swarm_link_led_color != swarm_link_led_color))
+			{
+				last_swarm_link_led_mode = swarm_link_led_mode;
+				last_swarm_link_led_color = swarm_link_led_color;
+				rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
+			}
 		}
 		else
 		{
@@ -3388,7 +3398,12 @@ Commander::run()
 				swarm_link_led_mode = led_control_s::MODE_OFF;
 			}
 			swarm_link_led_to_state_led = true;
-			rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
+			if((last_swarm_link_led_mode != swarm_link_led_mode) || (last_swarm_link_led_color != swarm_link_led_color))
+			{
+				last_swarm_link_led_mode = swarm_link_led_mode;
+				last_swarm_link_led_color = swarm_link_led_color;
+				rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
+			}
 		}
 		else
 		{
@@ -3397,6 +3412,15 @@ Commander::run()
 				swarm_link_led_to_state_led = false;
 				status_changed = true;
 			}
+		}
+
+		if((((_light_control_receive.state >> 7) & 0x01) ==1) || (((_broadcast_light_control_receive.number[swarm_link_node_num - 1] >> 7) & 0x01) == 1))
+		{
+			led_status_shut_down = true;
+		}
+		else
+		{
+			led_status_shut_down = false;
 		}
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
@@ -4760,7 +4784,8 @@ int Commander::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("commander",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT + 40,
-				      3160,
+//				      3160,
+					  5000,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 

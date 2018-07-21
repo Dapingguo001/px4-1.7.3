@@ -23,6 +23,9 @@
 
 #include <uORB/topics/vehicle_local_position.h>
 
+#include <uORB/topics/vehicle_global_position.h>
+
+
 #include <drivers/drv_led.h>
 #include "swarm_link.h"
 
@@ -39,7 +42,12 @@ Swarm_Link::Swarm_Link():
     _task_should_exit(false),
     _swarm_link_task(-1)
 {
-
+    memset(&_fc_statue_receive, 0, sizeof(_fc_statue_receive));
+    memset(&_light_control_receive, 0, sizeof(_light_control_receive));
+    memset(&_gps_position, 0, sizeof(_gps_position));
+    memset(&_home_position, 0, sizeof(_home_position));
+    memset(&_global_position, 0, sizeof(_global_position));
+    memset(&_battery_status, 0, sizeof(_battery_status));
 }
 
 Swarm_Link::~Swarm_Link()
@@ -107,7 +115,7 @@ Swarm_Link::task_main()
     _home_position_sub = orb_subscribe(ORB_ID(home_position));
     _battery_status_sub = orb_subscribe(ORB_ID(battery_status));
     _local_position_sub = orb_subscribe(ORB_ID(vehicle_local_position));
-
+    _global_position_sub = orb_subscribe(ORB_ID(vehicle_global_position));
     //公告消息
 //    led_control_pub = orb_advertise(ORB_ID(led_control), &_led_control);
     //led_control_pub = orb_advertise_queue(ORB_ID(led_control), &_led_control, LED_UORB_QUEUE_LENGTH);
@@ -133,6 +141,12 @@ Swarm_Link::task_main()
         {
             orb_copy(ORB_ID(vehicle_local_position), _local_position_sub, &_local_position);
         }
+
+        orb_check(_global_position_sub, &updated);
+        if(updated)
+        {
+            orb_copy(ORB_ID(vehicle_global_position), _global_position_sub, &_global_position);
+        }        
 
         orb_check(_home_position_sub, &updated);
         if(updated)
@@ -172,8 +186,8 @@ Swarm_Link::task_main()
                 }
                 _fc_statue_send.lat = _gps_position.lat;
                 _fc_statue_send.lon = _gps_position.lon;
-                _fc_statue_send.alt = (int32_t)(_local_position.z * 1E3f);
-                _fc_statue_send.relative_alt = (int32_t)((_local_position.z - _home_position.alt) * 1E3f);
+                _fc_statue_send.alt = (int32_t)(-_global_position.alt * 1E3f);
+                _fc_statue_send.relative_alt = (int32_t)((_home_position.alt - _global_position.alt) * 1E3f);
                 _fc_statue_send.voltage_battery = (uint16_t)(_battery_status.voltage_filtered_v * 1E2f);
                 _fc_statue_send.battery_remaining = (uint8_t)(_battery_status.remaining * 100);//百分治
 
