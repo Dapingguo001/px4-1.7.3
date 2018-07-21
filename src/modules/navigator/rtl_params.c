@@ -55,7 +55,7 @@
  * @increment 0.5
  * @group Return To Land
  */
-PARAM_DEFINE_FLOAT(RTL_RETURN_ALT, 60);
+PARAM_DEFINE_FLOAT(RTL_RETURN_ALT, 15);
 
 
 /**
@@ -71,7 +71,7 @@ PARAM_DEFINE_FLOAT(RTL_RETURN_ALT, 60);
  * @increment 0.5
  * @group Return To Land
  */
-PARAM_DEFINE_FLOAT(RTL_DESCEND_ALT, 30);
+PARAM_DEFINE_FLOAT(RTL_DESCEND_ALT, 15);
 
 /**
  * RTL delay
@@ -86,7 +86,7 @@ PARAM_DEFINE_FLOAT(RTL_DESCEND_ALT, 30);
  * @increment 0.5
  * @group Return To Land
  */
-PARAM_DEFINE_FLOAT(RTL_LAND_DELAY, -1.0f);
+PARAM_DEFINE_FLOAT(RTL_LAND_DELAY, 0.0f);
 
 /**
  * Minimum distance to trigger rising to a safe altitude

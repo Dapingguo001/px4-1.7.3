@@ -103,7 +103,7 @@ PARAM_DEFINE_FLOAT(BAT_LOW_THR, 0.15f);
  * @increment 0.01
  * @reboot_required true
  */
-PARAM_DEFINE_FLOAT(BAT_CRIT_THR, 0.07f);
+PARAM_DEFINE_FLOAT(BAT_CRIT_THR, 0.10f);
 
 /**
  * Emergency threshold

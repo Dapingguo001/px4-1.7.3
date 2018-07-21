@@ -267,7 +267,7 @@ PARAM_DEFINE_INT32(COM_RC_ARM_HYST, 1000);
  * @decimal 0
  * @increment 1
  */
-PARAM_DEFINE_INT32(COM_DISARM_LAND, 0);
+PARAM_DEFINE_INT32(COM_DISARM_LAND, 1);
 
 /**
  * Allow arming without GPS
@@ -306,7 +306,7 @@ PARAM_DEFINE_INT32(COM_ARM_SWISBTN, 0);
  * @decimal 0
  * @increment 1
  */
-PARAM_DEFINE_INT32(COM_LOW_BAT_ACT, 0);
+PARAM_DEFINE_INT32(COM_LOW_BAT_ACT, 1);
 
 /**
  * Time-out to wait when offboard connection is lost before triggering offboard lost action.

@@ -67,7 +67,7 @@ PARAM_DEFINE_FLOAT(NAV_LOITER_RAD, 50.0f);
  * @increment 0.5
  * @group Mission
  */
-PARAM_DEFINE_FLOAT(NAV_ACC_RAD, 10.0f);
+PARAM_DEFINE_FLOAT(NAV_ACC_RAD, 2.0f);
 
 /**
  * FW Altitude Acceptance Radius
@@ -137,7 +137,7 @@ PARAM_DEFINE_INT32(NAV_DLL_ACT, 0);
  *
  * @group Mission
  */
-PARAM_DEFINE_INT32(NAV_RCL_ACT, 2);
+PARAM_DEFINE_INT32(NAV_RCL_ACT, 0);
 
 /**
  * Set traffic avoidance mode

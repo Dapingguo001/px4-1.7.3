@@ -77,7 +77,7 @@ PARAM_DEFINE_FLOAT(BAT_V_OFFS_CURR, 0.0);
  * @group Battery Calibration
  * @decimal 8
  */
-PARAM_DEFINE_FLOAT(BAT_V_DIV, 10.10640621);
+PARAM_DEFINE_FLOAT(BAT_V_DIV, 10.06368732);
 
 /**
  * Battery current per volt (A/V)
@@ -89,7 +89,7 @@ PARAM_DEFINE_FLOAT(BAT_V_DIV, 10.10640621);
  * @group Battery Calibration
  * @decimal 8
  */
-PARAM_DEFINE_FLOAT(BAT_A_PER_V, 36.36751556);
+PARAM_DEFINE_FLOAT(BAT_A_PER_V, 15.39103031);
 
 /**
  * Battery monitoring source.

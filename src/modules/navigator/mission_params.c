@@ -144,7 +144,7 @@ PARAM_DEFINE_INT32(MIS_ALTMODE, 1);
  * @value 4 Heading towards ROI
  * @group Mission
  */
-PARAM_DEFINE_INT32(MIS_YAWMODE, 1);
+PARAM_DEFINE_INT32(MIS_YAWMODE, 0);
 
 /**
  * Time in seconds we wait on reaching target heading at a waypoint if it is forced.
