@@ -324,7 +324,7 @@ static void answer_command(struct vehicle_command_s &cmd, unsigned result,
 
 /* publish vehicle status flags from the global variable status_flags*/
 static void publish_status_flags(orb_advert_t &vehicle_status_flags_pub, vehicle_status_flags_s& vehicle_status_flags);
-
+void rst_swarmlink_led_color_select(uint8_t color_select);
 
 static int power_button_state_notification_cb(board_power_button_state_notification_e request)
 {
@@ -3317,47 +3317,8 @@ Commander::run()
 			{
 				node_number = swarm_link_node_num - 51;
 			}
+			rst_swarmlink_led_color_select(_broadcast_light_control_receive.number[node_number]);
 
-			if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 1)
-			{
-				swarm_link_led_color = led_control_s::COLOR_RED;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 2)
-			{
-				swarm_link_led_color = led_control_s::COLOR_GREEN;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 3)
-			{
-				swarm_link_led_color = led_control_s::COLOR_BLUE;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 4)
-			{
-				swarm_link_led_color = led_control_s::COLOR_YELLOW;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 5)
-			{
-				swarm_link_led_color = led_control_s::COLOR_PURPLE;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 6)
-			{
-				swarm_link_led_color = led_control_s::COLOR_AMBER;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 7)
-			{
-				swarm_link_led_color = led_control_s::COLOR_CYAN;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 8)
-			{
-				swarm_link_led_color = led_control_s::COLOR_PINK;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 9)
-			{
-				swarm_link_led_color = led_control_s::COLOR_WATHET;
-			}
-			else if((_broadcast_light_control_receive.number[node_number] & 0x1f) == 10)
-			{
-				swarm_link_led_color = led_control_s::COLOR_LIGHT_YELLOW;
-			}
 			else
 			{
 				swarm_link_led_color = led_control_s::COLOR_WHITE;
@@ -4763,6 +4724,91 @@ void publish_status_flags(orb_advert_t &vehicle_status_flags_pub, vehicle_status
 			vehicle_status_flags_pub = orb_advertise(ORB_ID(vehicle_status_flags), &vehicle_status_flags);
 		}
 	}
+}
+
+void rst_swarmlink_led_color_select(uint8_t color_select)
+{
+	if((color_select & 0x1f) == 1)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_1;
+	}
+	else if((color_select & 0x1f) == 2)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_2;
+	}
+	else if((color_select & 0x1f) == 3)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_3;
+	}
+	else if((color_select & 0x1f) == 4)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_4;
+	}
+	else if((color_select & 0x1f) == 5)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_5;
+	}
+	else if((color_select & 0x1f) == 6)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_6;
+	}
+	else if((color_select & 0x1f) == 7)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_7;
+	}
+	else if((color_select & 0x1f) == 8)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_8;
+	}
+	else if((color_select & 0x1f) == 9)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_9;
+	}
+	else if((color_select & 0x1f) == 10)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_10;
+	}
+	else if((color_select & 0x1f) == 1)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_1;
+	}
+	else if((color_select & 0x1f) == 2)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_2;
+	}
+	else if((color_select & 0x1f) == 3)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_3;
+	}
+	else if((color_select & 0x1f) == 4)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_4;
+	}
+	else if((color_select & 0x1f) == 5)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_5;
+	}
+	else if((color_select & 0x1f) == 6)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_6;
+	}
+	else if((color_select & 0x1f) == 7)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_7;
+	}
+	else if((color_select & 0x1f) == 8)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_8;
+	}
+	else if((color_select & 0x1f) == 9)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_9;
+	}
+	else if((color_select & 0x1f) == 10)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_10;
+	}
+	/********************************************************************/
 }
 
 int Commander::custom_command(int argc, char *argv[])
