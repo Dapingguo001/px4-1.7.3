@@ -48,7 +48,8 @@
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_MIN, 1000.0f);
+//PARAM_DEFINE_FLOAT(RC1_MIN, 1000.0f);
+PARAM_DEFINE_FLOAT(RC1_MIN, 1103.0f);
 
 /**
  * RC channel 1 trim
@@ -60,7 +61,8 @@ PARAM_DEFINE_FLOAT(RC1_MIN, 1000.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_TRIM, 1500.0f);
+//PARAM_DEFINE_FLOAT(RC1_TRIM, 1500.0f);
+PARAM_DEFINE_FLOAT(RC1_TRIM, 1514.0f);
 
 /**
  * RC channel 1 maximum
@@ -72,7 +74,8 @@ PARAM_DEFINE_FLOAT(RC1_TRIM, 1500.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_MAX, 2000.0f);
+//PARAM_DEFINE_FLOAT(RC1_MAX, 2000.0f);
+PARAM_DEFINE_FLOAT(RC1_MAX, 1924.0f);
 
 /**
  * RC channel 1 reverse
@@ -107,7 +110,8 @@ PARAM_DEFINE_FLOAT(RC1_DZ, 10.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_MIN, 1000.0f);
+//PARAM_DEFINE_FLOAT(RC2_MIN, 1000.0f);
+PARAM_DEFINE_FLOAT(RC2_MIN, 1103.0f);
 
 /**
  * RC channel 2 trim
@@ -119,7 +123,8 @@ PARAM_DEFINE_FLOAT(RC2_MIN, 1000.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_TRIM, 1500.0f);
+//PARAM_DEFINE_FLOAT(RC2_TRIM, 1500.0f);
+PARAM_DEFINE_FLOAT(RC2_TRIM, 1513.0f);
 
 /**
  * RC channel 2 maximum
@@ -131,7 +136,8 @@ PARAM_DEFINE_FLOAT(RC2_TRIM, 1500.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_MAX, 2000.0f);
+//PARAM_DEFINE_FLOAT(RC2_MAX, 2000.0f);
+PARAM_DEFINE_FLOAT(RC2_MAX, 1924.0f);
 
 /**
  * RC channel 2 reverse
@@ -142,7 +148,7 @@ PARAM_DEFINE_FLOAT(RC2_MAX, 2000.0f);
  * @max 1.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_REV, 1.0f);
+PARAM_DEFINE_FLOAT(RC2_REV, -1.0f);
 
 /**
  * RC channel 2 dead zone
@@ -166,7 +172,8 @@ PARAM_DEFINE_FLOAT(RC2_DZ, 10.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC3_MIN, 1000);
+//PARAM_DEFINE_FLOAT(RC3_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC3_MIN, 1104);
 
 /**
  * RC channel 3 trim
@@ -178,7 +185,8 @@ PARAM_DEFINE_FLOAT(RC3_MIN, 1000);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC3_TRIM, 1500);
+//PARAM_DEFINE_FLOAT(RC3_TRIM, 1500);
+PARAM_DEFINE_FLOAT(RC3_TRIM, 1104);
 
 /**
  * RC channel 3 maximum
@@ -190,7 +198,8 @@ PARAM_DEFINE_FLOAT(RC3_TRIM, 1500);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC3_MAX, 2000);
+//PARAM_DEFINE_FLOAT(RC3_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC3_MAX, 1924);
 
 /**
  * RC channel 3 reverse
@@ -224,7 +233,8 @@ PARAM_DEFINE_FLOAT(RC3_DZ, 10.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC4_MIN, 1000);
+//PARAM_DEFINE_FLOAT(RC4_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC4_MIN, 1103);
 
 /**
  * RC channel 4 trim
@@ -236,7 +246,8 @@ PARAM_DEFINE_FLOAT(RC4_MIN, 1000);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC4_TRIM, 1500);
+//PARAM_DEFINE_FLOAT(RC4_TRIM, 1500);
+PARAM_DEFINE_FLOAT(RC4_TRIM, 1516);
 
 /**
  * RC channel 4 maximum
@@ -248,7 +259,8 @@ PARAM_DEFINE_FLOAT(RC4_TRIM, 1500);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC4_MAX, 2000);
+//PARAM_DEFINE_FLOAT(RC4_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC4_MAX, 1924);
 
 /**
  * RC channel 4 reverse
@@ -283,7 +295,8 @@ PARAM_DEFINE_FLOAT(RC4_DZ, 10.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC5_MIN, 1000);
+//PARAM_DEFINE_FLOAT(RC5_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC5_MIN, 964);
 
 /**
  * RC channel 5 trim
@@ -295,7 +308,8 @@ PARAM_DEFINE_FLOAT(RC5_MIN, 1000);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC5_TRIM, 1500);
+//PARAM_DEFINE_FLOAT(RC5_TRIM, 1500);
+PARAM_DEFINE_FLOAT(RC5_TRIM, 1516);
 
 /**
  * RC channel 5 maximum
@@ -307,7 +321,8 @@ PARAM_DEFINE_FLOAT(RC5_TRIM, 1500);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC5_MAX, 2000);
+//PARAM_DEFINE_FLOAT(RC5_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC5_MAX, 2064);
 
 /**
  * RC channel 5 reverse
@@ -341,7 +356,8 @@ PARAM_DEFINE_FLOAT(RC5_DZ,  10.0f);
  * @max 1500.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC6_MIN, 1000);
+//PARAM_DEFINE_FLOAT(RC6_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC6_MIN, 964);
 
 /**
  * RC channel 6 trim
@@ -353,7 +369,8 @@ PARAM_DEFINE_FLOAT(RC6_MIN, 1000);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC6_TRIM, 1500);
+//PARAM_DEFINE_FLOAT(RC6_TRIM, 1500);
+PARAM_DEFINE_FLOAT(RC6_TRIM, 1514);
 
 /**
  * RC channel 6 maximum
@@ -365,7 +382,8 @@ PARAM_DEFINE_FLOAT(RC6_TRIM, 1500);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC6_MAX, 2000);
+//PARAM_DEFINE_FLOAT(RC6_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC6_MAX, 2064);
 
 /**
  * RC channel 6 reverse
@@ -399,7 +417,8 @@ PARAM_DEFINE_FLOAT(RC6_DZ, 10.0f);
  * @max 1500.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC7_MIN, 1000);
+//PARAM_DEFINE_FLOAT(RC7_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC7_MIN, 964);
 
 /**
  * RC channel 7 trim
@@ -411,7 +430,8 @@ PARAM_DEFINE_FLOAT(RC7_MIN, 1000);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC7_TRIM, 1500);
+//PARAM_DEFINE_FLOAT(RC7_TRIM, 1500);
+PARAM_DEFINE_FLOAT(RC7_TRIM, 1514);
 
 /**
  * RC channel 7 maximum
@@ -423,7 +443,8 @@ PARAM_DEFINE_FLOAT(RC7_TRIM, 1500);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC7_MAX, 2000);
+//PARAM_DEFINE_FLOAT(RC7_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC7_MAX, 2064);
 
 /**
  * RC channel 7 reverse
@@ -457,7 +478,8 @@ PARAM_DEFINE_FLOAT(RC7_DZ, 10.0f);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC8_MIN, 1000);
+//PARAM_DEFINE_FLOAT(RC8_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC8_MIN, 964);
 
 /**
  * RC channel 8 trim
@@ -469,7 +491,8 @@ PARAM_DEFINE_FLOAT(RC8_MIN, 1000);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC8_TRIM, 1500);
+//PARAM_DEFINE_FLOAT(RC8_TRIM, 1500);
+PARAM_DEFINE_FLOAT(RC8_TRIM, 1514);
 
 /**
  * RC channel 8 maximum
@@ -481,7 +504,8 @@ PARAM_DEFINE_FLOAT(RC8_TRIM, 1500);
  * @unit us
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC8_MAX, 2000);
+//PARAM_DEFINE_FLOAT(RC8_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC8_MAX, 2064);
 
 /**
  * RC channel 8 reverse
@@ -1097,7 +1121,8 @@ PARAM_DEFINE_FLOAT(RC18_DZ, 0.0f);
  * @group Radio Calibration
  */
 
-PARAM_DEFINE_INT32(RC_CHAN_CNT, 0);
+//PARAM_DEFINE_INT32(RC_CHAN_CNT, 0);
+PARAM_DEFINE_INT32(RC_CHAN_CNT, 18);
 
 /**
  * Roll control channel mapping.
@@ -1129,7 +1154,8 @@ PARAM_DEFINE_INT32(RC_CHAN_CNT, 0);
  * @value 18 Channel 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_ROLL, 0);
+//PARAM_DEFINE_INT32(RC_MAP_ROLL, 0);
+PARAM_DEFINE_INT32(RC_MAP_ROLL, 1);
 
 /**
  * Pitch control channel mapping.
@@ -1161,7 +1187,8 @@ PARAM_DEFINE_INT32(RC_MAP_ROLL, 0);
  * @value 18 Channel 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_PITCH, 0);
+//PARAM_DEFINE_INT32(RC_MAP_PITCH, 0);
+PARAM_DEFINE_INT32(RC_MAP_PITCH, 2);
 
 /**
  * Failsafe channel mapping.
@@ -1225,7 +1252,8 @@ PARAM_DEFINE_INT32(RC_MAP_FAILSAFE, 0);
  * @value 18 Channel 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_THROTTLE, 0);
+//PARAM_DEFINE_INT32(RC_MAP_THROTTLE, 0);
+PARAM_DEFINE_INT32(RC_MAP_THROTTLE, 3);
 
 /**
  * Yaw control channel mapping.
@@ -1257,7 +1285,8 @@ PARAM_DEFINE_INT32(RC_MAP_THROTTLE, 0);
  * @value 18 Channel 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_YAW, 0);
+//PARAM_DEFINE_INT32(RC_MAP_YAW, 0);
+PARAM_DEFINE_INT32(RC_MAP_YAW, 4);
 
 /**
  * Single channel flight mode selection
@@ -1288,7 +1317,8 @@ PARAM_DEFINE_INT32(RC_MAP_YAW, 0);
  * @value 17 Channel 17
  * @value 18 Channel 18
  */
-PARAM_DEFINE_INT32(RC_MAP_FLTMODE, 0);
+//PARAM_DEFINE_INT32(RC_MAP_FLTMODE, 0);
+PARAM_DEFINE_INT32(RC_MAP_FLTMODE, 5);
 
 /**
  * Mode switch channel mapping.
@@ -1349,7 +1379,8 @@ PARAM_DEFINE_INT32(RC_MAP_MODE_SW, 0);
  * @value 17 Channel 17
  * @value 18 Channel 18
  */
-PARAM_DEFINE_INT32(RC_MAP_RETURN_SW, 0);
+//PARAM_DEFINE_INT32(RC_MAP_RETURN_SW, 0);
+PARAM_DEFINE_INT32(RC_MAP_RETURN_SW, 6);
 
 /**
  * Rattitude switch channel

@@ -329,7 +329,7 @@ RGBLED_PWM::led()
 			break;
 		
 		case led_control_s::RST_COLOR_22:
-			_r = 128; _g = 0; _b = 1128;
+			_r = 128; _g = 0; _b = 128;
 			break;
 
 		case led_control_s::RST_COLOR_23:
@@ -366,11 +366,11 @@ RGBLED_PWM::led()
 		///////////////////////////////////////////
 		case led_control_s::RST_COLOR_31:
 			_r = 153; _g = 102; _b = 0;
-		break;
+			break;
 
 		case led_control_s::RST_COLOR_32:
 			_r = 255; _g = 255; _b = 255;
-		break;		
+			break;		
 
 		default: // led_control_s::COLOR_OFF
 			_r = 0; _g = 0; _b = 0;

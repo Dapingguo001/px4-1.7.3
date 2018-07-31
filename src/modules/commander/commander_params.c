@@ -372,7 +372,8 @@ PARAM_DEFINE_INT32(COM_OBL_RC_ACT, 0);
  * @value 12 Follow Me
  * @group Commander
  */
-PARAM_DEFINE_INT32(COM_FLTMODE1, -1);
+//PARAM_DEFINE_INT32(COM_FLTMODE1, -1);
+PARAM_DEFINE_INT32(COM_FLTMODE1, 8);
 
 /**
  * Second flightmode slot (1160-1320)
@@ -444,7 +445,8 @@ PARAM_DEFINE_INT32(COM_FLTMODE3, -1);
  * @value 12 Follow Me
  * @group Commander
  */
-PARAM_DEFINE_INT32(COM_FLTMODE4, -1);
+//PARAM_DEFINE_INT32(COM_FLTMODE4, -1);
+PARAM_DEFINE_INT32(COM_FLTMODE4, 1);
 
 /**
  * Fifth flightmode slot (1640-1800)
@@ -492,7 +494,8 @@ PARAM_DEFINE_INT32(COM_FLTMODE5, -1);
  * @value 12 Follow Me
  * @group Commander
  */
-PARAM_DEFINE_INT32(COM_FLTMODE6, -1);
+//PARAM_DEFINE_INT32(COM_FLTMODE6, -1);
+PARAM_DEFINE_INT32(COM_FLTMODE6, 2);
 
 /**
  * Maximum EKF position innovation test ratio that will allow arming

@@ -259,6 +259,8 @@ static bool _last_condition_global_position_valid = false;
 
 static struct vehicle_land_detected_s land_detector = {};
 
+uint8_t swarm_link_led_color = 0;
+
 /**
  * The daemon app only briefly exists to start
  * the background job. The stack size assigned in the
@@ -1584,7 +1586,6 @@ Commander::run()
 	struct rst_swarm_link_light_control_receive_s _light_control_receive;
 	memset(&_light_control_receive, 0, sizeof(_light_control_receive));
 	uint8_t swarm_link_led_mode = 0;
-	uint8_t swarm_link_led_color = 0;
 
 	uint8_t last_swarm_link_led_mode = 0;
 	uint8_t last_swarm_link_led_color = 0;
@@ -3230,46 +3231,9 @@ Commander::run()
 		
 		if(((_light_control_receive.state >> 7) & 0x01) ==1)
 		{
-			if(_light_control_receive.red && !_light_control_receive.green && !_light_control_receive.blue)
-			{
-				swarm_link_led_color = led_control_s::COLOR_RED;
-			}
-			else if(!_light_control_receive.red && _light_control_receive.green && !_light_control_receive.blue)
-			{
-				swarm_link_led_color = led_control_s::COLOR_GREEN;
-			}
-			else if(!_light_control_receive.red && !_light_control_receive.green && _light_control_receive.blue)
-			{
-				swarm_link_led_color = led_control_s::COLOR_BLUE;
-			}
-			else if(_light_control_receive.red && _light_control_receive.green && !_light_control_receive.blue)
-			{
-				swarm_link_led_color = led_control_s::COLOR_YELLOW;
-			}
-			else if(_light_control_receive.red && !_light_control_receive.green && _light_control_receive.blue)
-			{
-				swarm_link_led_color = led_control_s::COLOR_PURPLE;
-			}
-			else if(!_light_control_receive.red && _light_control_receive.green && _light_control_receive.blue)
-			{
-				swarm_link_led_color = led_control_s::COLOR_CYAN;
-			}
-			else if(_light_control_receive.red == 235 && _light_control_receive.green == 115 && _light_control_receive.blue == 229)
-			{
-				swarm_link_led_color = led_control_s::COLOR_PINK;
-			}
-			else if(_light_control_receive.red == 104 && _light_control_receive.green == 236 && _light_control_receive.blue == 246)
-			{
-				swarm_link_led_color = led_control_s::COLOR_WATHET;
-			}
-			else if(_light_control_receive.red == 246 && _light_control_receive.green == 222 && _light_control_receive.blue == 174)
-			{
-				swarm_link_led_color = led_control_s::COLOR_LIGHT_YELLOW;
-			}
-			else
-			{
-				swarm_link_led_color = led_control_s::COLOR_WHITE;
-			}
+			//选择灯光颜色
+			rst_swarmlink_led_color_select(_light_control_receive.red);
+			//选择灯光模式
 			if((_light_control_receive.state & 0x0f) == 1)
 			{
 				swarm_link_led_mode = led_control_s::MODE_ON;
@@ -3317,13 +3281,9 @@ Commander::run()
 			{
 				node_number = swarm_link_node_num - 51;
 			}
+			//选择灯光颜色
 			rst_swarmlink_led_color_select(_broadcast_light_control_receive.number[node_number]);
-
-			else
-			{
-				swarm_link_led_color = led_control_s::COLOR_WHITE;
-			}
-
+			//选择灯光模式
 			if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 1)
 			{
 				swarm_link_led_mode = led_control_s::MODE_ON;
@@ -4768,47 +4728,101 @@ void rst_swarmlink_led_color_select(uint8_t color_select)
 	{
 		swarm_link_led_color = led_control_s::RST_COLOR_10;
 	}
-	else if((color_select & 0x1f) == 1)
+	/******************************************************/
+	else if((color_select & 0x1f) == 11)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_1;
+		swarm_link_led_color = led_control_s::RST_COLOR_11;
 	}
-	else if((color_select & 0x1f) == 2)
+	else if((color_select & 0x1f) == 12)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_2;
+		swarm_link_led_color = led_control_s::RST_COLOR_12;
 	}
-	else if((color_select & 0x1f) == 3)
+	else if((color_select & 0x1f) == 13)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_3;
+		swarm_link_led_color = led_control_s::RST_COLOR_13;
 	}
-	else if((color_select & 0x1f) == 4)
+	else if((color_select & 0x1f) == 14)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_4;
+		swarm_link_led_color = led_control_s::RST_COLOR_14;
 	}
-	else if((color_select & 0x1f) == 5)
+	else if((color_select & 0x1f) == 15)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_5;
+		swarm_link_led_color = led_control_s::RST_COLOR_15;
 	}
-	else if((color_select & 0x1f) == 6)
+	else if((color_select & 0x1f) == 16)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_6;
+		swarm_link_led_color = led_control_s::RST_COLOR_16;
 	}
-	else if((color_select & 0x1f) == 7)
+	else if((color_select & 0x1f) == 17)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_7;
+		swarm_link_led_color = led_control_s::RST_COLOR_17;
 	}
-	else if((color_select & 0x1f) == 8)
+	else if((color_select & 0x1f) == 18)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_8;
+		swarm_link_led_color = led_control_s::RST_COLOR_18;
 	}
-	else if((color_select & 0x1f) == 9)
+	else if((color_select & 0x1f) == 19)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_9;
+		swarm_link_led_color = led_control_s::RST_COLOR_19;
 	}
-	else if((color_select & 0x1f) == 10)
+	else if((color_select & 0x1f) == 20)
 	{
-		swarm_link_led_color = led_control_s::RST_COLOR_10;
+		swarm_link_led_color = led_control_s::RST_COLOR_20;
 	}
-	/********************************************************************/
+	/*******************************************************/
+	else if((color_select & 0x1f) == 21)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_21;
+	}
+	else if((color_select & 0x1f) == 22)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_22;
+	}
+	else if((color_select & 0x1f) == 23)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_23;
+	}
+	else if((color_select & 0x1f) == 24)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_24;
+	}
+	else if((color_select & 0x1f) == 25)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_25;
+	}
+	else if((color_select & 0x1f) == 26)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_26;
+	}
+	else if((color_select & 0x1f) == 27)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_27;
+	}
+	else if((color_select & 0x1f) == 28)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_28;
+	}
+	else if((color_select & 0x1f) == 29)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_29;
+	}
+	else if((color_select & 0x1f) == 30)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_30;
+	}
+	/******************************************************/
+	else if((color_select & 0x1f) == 31)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_31;
+	}
+	else if((color_select & 0x1f) == 32)
+	{
+		swarm_link_led_color = led_control_s::RST_COLOR_32;
+	}
+	else
+	{
+		swarm_link_led_color = led_control_s::COLOR_WHITE;
+	}
 }
 
 int Commander::custom_command(int argc, char *argv[])
