@@ -116,6 +116,7 @@ int LedController::update(LedControlData &control_data)
 				break;
 
 			case led_control_s::MODE_BLINK_NORMAL:
+			case led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL:
 				current_blink_duration = BLINK_NORMAL_DURATION / 100;
 				break;
 
@@ -165,7 +166,7 @@ int LedController::update(LedControlData &control_data)
 
 			break; // handle next led
 		}
-
+		
 		current_priorities[i] = priority;
 
 	}
@@ -218,6 +219,12 @@ void LedController::get_control_data(LedControlData &control_data)
 				continue; // handle next priority
 			}
 
+			if((cur_data.mode == led_control_s::RST_SWARMLINK_RAND_BLINK_OFF) || 
+				(cur_data.mode == led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL))
+			{
+				control_data.leds[i].color = led_control_s::COLOR_WHITE;
+			}
+
 			switch (cur_data.mode) {
 			case led_control_s::MODE_ON:
 				control_data.leds[i].color = cur_data.color;
@@ -242,6 +249,7 @@ void LedController::get_control_data(LedControlData &control_data)
 			case led_control_s::MODE_BLINK_FAST:
 			case led_control_s::MODE_BLINK_NORMAL:
 			case led_control_s::MODE_BLINK_SLOW:
+			case led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL:
 				if (cur_data.blink_times_left % 2 == 0 && flash_output_active) {
 					control_data.leds[i].color = cur_data.color;
 				}

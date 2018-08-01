@@ -47,6 +47,7 @@
 
 struct LedControlDataSingle {
 	uint8_t color; ///< one of led_control_s::COLOR_*
+	uint8_t mode;
 	uint8_t brightness; ///< brightness in [0, 255]
 };
 struct LedControlData {

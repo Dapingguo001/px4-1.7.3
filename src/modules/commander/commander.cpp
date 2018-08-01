@@ -3240,7 +3240,7 @@ Commander::run()
 			}
 			else if((_light_control_receive.state & 0x0f) == 2)
 			{
-				swarm_link_led_mode = led_control_s::MODE_BLINK_NORMAL;
+				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
 			}
 			else
 			{
@@ -3290,7 +3290,7 @@ Commander::run()
 			}
 			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 2)
 			{
-				swarm_link_led_mode = led_control_s::MODE_BLINK_NORMAL;
+				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
 			}
 			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 3)
 			{
@@ -3301,11 +3301,12 @@ Commander::run()
 				}
 				else if(rand_color_count == 49)
 				{
-					rand_color = rand()%(11-1+1)+1;
+					srand(hrt_absolute_time());
+					rand_color = rand() % 31;
 				}
 				else
 				{
-					swarm_link_led_mode = led_control_s::MODE_OFF;
+					swarm_link_led_mode = led_control_s::RST_SWARMLINK_RAND_BLINK_OFF;
 				}
 				
 				rand_color_count++;
@@ -3318,6 +3319,13 @@ Commander::run()
 			{
 				swarm_link_led_mode = led_control_s::MODE_OFF;
 			}
+
+			if(_broadcast_light_control_receive.number[swarm_link_node_num - 1] == 255)
+			{
+				swarm_link_led_color = last_swarm_link_led_color;
+				swarm_link_led_mode = last_swarm_link_led_color;
+			}
+
 			swarm_link_led_to_state_led = true;
 			if((last_swarm_link_led_mode != swarm_link_led_mode) || (last_swarm_link_led_color != swarm_link_led_color))
 			{
@@ -3343,6 +3351,7 @@ Commander::run()
 		{
 			led_status_shut_down = false;
 		}
+//		rgbled_set_color_and_mode(led_control_s::COLOR_RED, led_control_s::MODE_BLINK_NORMAL);
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
 	}
@@ -4815,13 +4824,9 @@ void rst_swarmlink_led_color_select(uint8_t color_select)
 	{
 		swarm_link_led_color = led_control_s::RST_COLOR_31;
 	}
-	else if((color_select & 0x1f) == 32)
-	{
-		swarm_link_led_color = led_control_s::RST_COLOR_32;
-	}
 	else
 	{
-		swarm_link_led_color = led_control_s::COLOR_WHITE;
+		swarm_link_led_color = led_control_s::RST_COLOR_32;
 	}
 }
 

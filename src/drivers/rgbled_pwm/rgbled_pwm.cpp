@@ -373,7 +373,7 @@ RGBLED_PWM::led()
 			break;		
 
 		default: // led_control_s::COLOR_OFF
-			_r = 0; _g = 0; _b = 0;
+			_r = 0; _g = 0; _b = 0;			
 			break;
 		}
 		_brightness = (float)led_control_data.leds[0].brightness / 255.f;

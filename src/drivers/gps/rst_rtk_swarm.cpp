@@ -339,7 +339,7 @@ GPSDriverRST_RTK_SWARM::payloadRxDone()
     timeinfo.tm_sec		=  rtk_swarm_data.sec;
 
 
-/*#ifndef NO_MKTIME
+#ifndef NO_MKTIME
     time_t epoch = mktime(&timeinfo);
 
     if (epoch > GPS_EPOCH_SECS) {
@@ -363,7 +363,7 @@ GPSDriverRST_RTK_SWARM::payloadRxDone()
 
 #else
     _gps_position->time_utc_usec = 0;
-#endif*/
+#endif
 
 
     _gps_position->timestamp = gps_absolute_time();

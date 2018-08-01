@@ -58,6 +58,10 @@ uint8 MODE_BLINK_FAST = 5
 uint8 MODE_BREATHE = 6 # continuously increase & decrease brightness (solid color if driver does not support it)
 uint8 MODE_FLASH = 7 # two fast blinks (on/off) with timing as in MODE_BLINK_FAST and then off for a while
 
+uint8 RST_SWARMLINK_RAND_BLINK_OFF = 8
+uint8 RST_SWARMLINK_MODE_BLINK_NORMAL = 9
+
+
 uint8 MAX_PRIORITY = 2 # maxium priority (minimum is 0)
 
 
