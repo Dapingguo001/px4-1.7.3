@@ -1599,6 +1599,7 @@ Commander::run()
 	uint16_t rand_color_count = 0;
 	uint8_t  rand_color = 0;
 	bool led_status_shut_down = false;
+	uint8_t _last_broadcast_light_control_receive_data = 0;
 
 
 	control_status_leds(&status, &armed, true, &battery, &cpuload);
@@ -3281,6 +3282,12 @@ Commander::run()
 			{
 				node_number = swarm_link_node_num - 51;
 			}
+
+			if(_broadcast_light_control_receive.number[swarm_link_node_num - 1] == 255)
+			{
+				_broadcast_light_control_receive.number[swarm_link_node_num - 1] = _last_broadcast_light_control_receive_data;
+			}
+
 			//选择灯光颜色
 			rst_swarmlink_led_color_select(_broadcast_light_control_receive.number[node_number]);
 			//选择灯光模式
@@ -3320,12 +3327,6 @@ Commander::run()
 				swarm_link_led_mode = led_control_s::MODE_OFF;
 			}
 
-			if(_broadcast_light_control_receive.number[swarm_link_node_num - 1] == 255)
-			{
-				swarm_link_led_color = last_swarm_link_led_color;
-				swarm_link_led_mode = last_swarm_link_led_color;
-			}
-
 			swarm_link_led_to_state_led = true;
 			if((last_swarm_link_led_mode != swarm_link_led_mode) || (last_swarm_link_led_color != swarm_link_led_color))
 			{
@@ -3333,6 +3334,7 @@ Commander::run()
 				last_swarm_link_led_color = swarm_link_led_color;
 				rgbled_set_color_and_mode(swarm_link_led_color, swarm_link_led_mode);
 			}
+			_last_broadcast_light_control_receive_data = _broadcast_light_control_receive.number[node_number];
 		}
 		else
 		{

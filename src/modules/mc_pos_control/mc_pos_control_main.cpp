@@ -67,6 +67,7 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/vehicle_gps_position.h>
 
 #include <float.h>
 #include <lib/geo/geo.h>
@@ -145,6 +146,7 @@ private:
 	int		_local_pos_sub;			/**< vehicle local position */
 	int		_pos_sp_triplet_sub;		/**< position setpoint triplet */
 	int		_home_pos_sub; 			/**< home position */
+	int     _gps_position_sub;
 
 	orb_advert_t	_att_sp_pub;			/**< attitude setpoint publication */
 	orb_advert_t	_local_pos_sp_pub;		/**< vehicle local position setpoint publication */
@@ -161,6 +163,7 @@ private:
 	struct position_setpoint_triplet_s		_pos_sp_triplet;	/**< vehicle global position setpoint triplet */
 	struct vehicle_local_position_setpoint_s	_local_pos_sp;		/**< vehicle local position setpoint */
 	struct home_position_s				_home_pos; 				/**< home position */
+	struct vehicle_gps_position_s       _gps_position;
 
 	control::BlockParamFloat _manual_thr_min; /**< minimal throttle output when flying in manual mode */
 	control::BlockParamFloat _manual_thr_max; /**< maximal throttle output when flying in manual mode */
@@ -420,6 +423,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_local_pos_sub(-1),
 	_pos_sp_triplet_sub(-1),
 	_home_pos_sub(-1),
+	_gps_position_sub(-1),
 
 	/* publications */
 	_att_sp_pub(nullptr),
@@ -826,6 +830,13 @@ MulticopterPositionControl::poll_subscriptions()
 	if (updated) {
 		orb_copy(ORB_ID(home_position), _home_pos_sub, &_home_pos);
 	}
+
+	orb_check(_gps_position_sub, &updated);
+	
+	if (updated) {
+		orb_copy(ORB_ID(vehicle_gps_position), _gps_position_sub, &_gps_position);
+	}
+
 }
 
 float
@@ -3001,6 +3012,7 @@ MulticopterPositionControl::task_main()
 	_local_pos_sub = orb_subscribe(ORB_ID(vehicle_local_position));
 	_pos_sp_triplet_sub = orb_subscribe(ORB_ID(position_setpoint_triplet));
 	_home_pos_sub = orb_subscribe(ORB_ID(home_position));
+	_gps_position_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
 
 	parameters_update(true);
 
