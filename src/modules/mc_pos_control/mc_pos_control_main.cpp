@@ -301,6 +301,20 @@ private:
 
 	float _takeoff_vel_limit; /**< velocity limit value which gets ramped up */
 
+	uint64_t gps_time = 0;
+	uint64_t gps_time_last = 0;
+	uint64_t gps_time_delta = 0;
+
+	uint64_t mcu_time = 0;
+	uint64_t mcu_time_last = 0;
+	uint64_t mcu_time_delta = 0;
+
+	uint64_t global_time = 0;
+	uint64_t global_time_last = 0;
+	uint64_t global_time_delta = 0;
+
+	bool     global_time_start = false;
+
 	// counters for reset events on position and velocity states
 	// they are used to identify a reset event
 	uint8_t _z_reset_counter;
@@ -835,7 +849,31 @@ MulticopterPositionControl::poll_subscriptions()
 	
 	if (updated) {
 		orb_copy(ORB_ID(vehicle_gps_position), _gps_position_sub, &_gps_position);
+		if(!global_time_start && _gps_position.fix_type > 4)
+		{
+			global_time_start = true;
+			gps_time_last = gps_time = _gps_position.time_utc_usec;
+			mcu_time_last = mcu_time = hrt_absolute_time();
+
+			global_time = _gps_position.time_utc_usec;
+		}
+		else
+		{
+			gps_time_delta = _gps_position.time_utc_usec - gps_time_last;
+			gps_time_last = _gps_position.time_utc_usec;
+		}
 	}
+
+/*	if(global_time_start)
+	{
+		mcu_time_delta = hrt_absolute_time() - mcu_time_last;
+		mcu_time_last = hrt_absolute_time();
+		
+		global_time = gps_time + mcu_time_delta + 
+	}*/
+
+
+
 
 }
 

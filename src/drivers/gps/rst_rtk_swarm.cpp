@@ -368,8 +368,6 @@ GPSDriverRST_RTK_SWARM::payloadRxDone()
 
     _gps_position->timestamp = gps_absolute_time();
 
-  _gps_position->time_utc_usec =  _gps_position->timestamp;
-
     _last_timestamp_time = _gps_position->timestamp;
 
     
