@@ -316,9 +316,9 @@ GPSDriverRST_RTK_SWARM::payloadRxDone()
     _gps_position->alt = rtk_swarm_data.hMSL;
     _gps_position->alt_ellipsoid = rtk_swarm_data.height;
 
-    _gps_position->eph = 0.8f;//(float)(rtk_swarm_data.hAcc * 1e-3f);
-    _gps_position->epv = 1.2f;//(float)(rtk_swarm_data.vAcc * 1e-3f);
-    _gps_position->s_variance_m_s = 0.2f;//(float)(rtk_swarm_data.sAcc * 1e-3f);
+    _gps_position->eph = (float)(rtk_swarm_data.hAcc * 1e-3f);
+    _gps_position->epv = (float)(rtk_swarm_data.vAcc * 1e-3f);
+    _gps_position->s_variance_m_s = (float)(rtk_swarm_data.sAcc * 1e-3f);
     _gps_position->vel_m_s = (float)(rtk_swarm_data.gSpeed * 1e-3f);
 
     _gps_position->vel_n_m_s = (float)(rtk_swarm_data.velN * 1e-3f);

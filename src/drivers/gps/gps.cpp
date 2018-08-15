@@ -716,7 +716,7 @@ GPS::run()
 				/* reset report */
 				memset(&_report_gps_pos, 0, sizeof(_report_gps_pos));
 
-				if (_mode == GPS_DRIVER_MODE_UBX) {
+				if (_mode == GPS_DRIVER_MODE_UBX || _mode == GPS_DRIVER_MODE_RST_RTK_SWARM) {
 
 					/* GPS is obviously detected successfully, reset statistics */
 					_helper->resetUpdateRates();
@@ -727,8 +727,8 @@ GPS::run()
 				while ((helper_ret = _helper->receive(TIMEOUT_5HZ)) > 0 && !should_exit()) {
 
 					if (helper_ret & 1) {
+						_mode_auto = false;
 						publish();
-
 						last_rate_count++;
 					}
 

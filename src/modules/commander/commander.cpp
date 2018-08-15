@@ -3353,7 +3353,7 @@ Commander::run()
 		{
 			led_status_shut_down = false;
 		}
-//		rgbled_set_color_and_mode(led_control_s::COLOR_RED, led_control_s::MODE_BLINK_NORMAL);
+//		rgbled_set_color_and_mode(led_control_s::COLOR_BLUE, led_control_s::MODE_BLINK_NORMAL);
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
 	}

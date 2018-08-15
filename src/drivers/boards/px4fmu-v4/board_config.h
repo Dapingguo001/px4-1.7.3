@@ -249,9 +249,9 @@
  #define GPIO_TIM4_CH4OUT             (GPIO_ALT|GPIO_AF2|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PUSHPULL|GPIO_PULLDOWN|GPIO_PORTD|GPIO_PIN15)
  #define DIRECT_PWM_OUTPUT_CHANNELS   8
 
- #define RST_RGB_PWM_CONTROL_R GPIO_TIM4_CH4OUT
- #define RST_RGB_PWM_CONTROL_G GPIO_TIM4_CH3OUT
- #define RST_RGB_PWM_CONTROL_B GPIO_TIM4_CH2OUT
+ #define RST_RGB_PWM_CONTROL_R         (GPIO_ALT|GPIO_AF2|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PUSHPULL|GPIO_PULLDOWN|GPIO_PORTB|GPIO_PIN5)
+ #define RST_RGB_PWM_CONTROL_G         (GPIO_ALT|GPIO_AF2|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PUSHPULL|GPIO_PULLDOWN|GPIO_PORTB|GPIO_PIN6)
+ #define RST_RGB_PWM_CONTROL_B         (GPIO_ALT|GPIO_AF2|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PUSHPULL|GPIO_PULLDOWN|GPIO_PORTB|GPIO_PIN7)
  #define BOARD_HAS_LED_PWM              1
  
  #define GPIO_TIM1_CH1IN              GPIO_TIM1_CH1IN_2
@@ -271,7 +271,8 @@
  #define GPIO_OTGFS_VBUS              (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|GPIO_OPENDRAIN|GPIO_PORTA|GPIO_PIN9)
  
  /* High-resolution timer */
- #define HRT_TIMER                    3   /* use timer 3 for the HRT */
+ //#define HRT_TIMER                    5   /* use timer 3 for the HRT */
+ #define HRT_TIMER                    5   /* use timer 3 for the HRT */
  #define HRT_TIMER_CHANNEL            4   /* use capture/compare channel 4 */
  
  #define HRT_PPM_CHANNEL              3    /* use capture/compare channel 3 */

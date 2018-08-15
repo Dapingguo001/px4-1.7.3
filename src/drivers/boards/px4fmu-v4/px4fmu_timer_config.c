@@ -144,11 +144,21 @@ __EXPORT const timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 
 __EXPORT const struct io_timers_t led_pwm_timers[MAX_LED_TIMERS] = {
 	{
+		.base = STM32_TIM3_BASE,
+		.clock_register = STM32_RCC_APB1ENR,
+		.clock_bit = RCC_APB1ENR_TIM3EN,
+		.clock_freq = STM32_APB1_TIM3_CLKIN,
+		.first_channel_index = 0,
+		.last_channel_index = 0,
+		.vectorno =  0,
+	},
+
+	{
 		.base = STM32_TIM4_BASE,
 		.clock_register = STM32_RCC_APB1ENR,
 		.clock_bit = RCC_APB1ENR_TIM4EN,
 		.clock_freq = STM32_APB1_TIM4_CLKIN,
-		.first_channel_index = 0,
+		.first_channel_index = 1,
 		.last_channel_index = 2,
 		.vectorno =  0,
 	}
@@ -159,18 +169,18 @@ __EXPORT const struct timer_io_channels_t led_pwm_channels[MAX_TIMER_LED_CHANNEL
 		.gpio_out = RST_RGB_PWM_CONTROL_R,
 		.gpio_in  = 0,
 		.timer_index = 0,
-		.timer_channel = 4,
+		.timer_channel = 2,
 	},
 	{
 		.gpio_out = RST_RGB_PWM_CONTROL_G,
 		.gpio_in  = 0,
-		.timer_index = 0,
-		.timer_channel = 3,
+		.timer_index = 1,
+		.timer_channel = 1,
 	},
 	{
 		.gpio_out = RST_RGB_PWM_CONTROL_B,
 		.gpio_in  = 0,
-		.timer_index = 0,
+		.timer_index = 1,
 		.timer_channel = 2,
 	}
 };
