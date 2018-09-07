@@ -175,7 +175,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_D, 0.0f);
  * @decimal 1
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_Z_VEL_MAX_UP, 1.0f);
+PARAM_DEFINE_FLOAT(MPC_Z_VEL_MAX_UP, 2.0f);
 
 /**
  * Maximum vertical descent velocity

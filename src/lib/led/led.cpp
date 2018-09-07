@@ -118,6 +118,7 @@ int LedController::update(LedControlData &control_data)
 			switch (cur_data.mode) {
 			case led_control_s::MODE_FLASH:
 			case led_control_s::MODE_BLINK_FAST:
+			case led_control_s::MODE_STATUS_BLINK_FAST:
 				current_blink_duration = BLINK_FAST_DURATION / 100;
 				break;
 
@@ -313,6 +314,7 @@ void LedController::get_control_data(LedControlData &control_data)
 
 			/* FALLTHROUGH */
 			case led_control_s::MODE_BLINK_FAST:
+			case led_control_s::MODE_STATUS_BLINK_FAST:
 			case led_control_s::MODE_BLINK_NORMAL:
 			case led_control_s::MODE_BLINK_SLOW:
 			case led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL:

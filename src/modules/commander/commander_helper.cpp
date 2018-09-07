@@ -115,6 +115,7 @@ static DevHandle h_leds;
 static DevHandle h_buzzer;
 static led_control_s led_control = {};
 static orb_advert_t led_control_pub = nullptr;
+static uint8_t led_fun_on_off_mask = 0;		//0000 0000:normal(all on) 0000 0001:status led off
 
 int buzzer_init()
 {
@@ -171,7 +172,7 @@ void set_tune(int tune)
 void tune_home_set(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_HOME_SET);
@@ -181,7 +182,7 @@ void tune_home_set(bool use_buzzer)
 void tune_mission_ok(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_NEUTRAL_TUNE);
@@ -191,7 +192,7 @@ void tune_mission_ok(bool use_buzzer)
 void tune_mission_fail(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_NEGATIVE_TUNE);
@@ -204,7 +205,7 @@ void tune_mission_fail(bool use_buzzer)
 void tune_positive(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_GREEN, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_POSITIVE_TUNE);
@@ -217,7 +218,7 @@ void tune_positive(bool use_buzzer)
 void tune_neutral(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_WHITE, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_WHITE, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_NEUTRAL_TUNE);
@@ -230,7 +231,7 @@ void tune_neutral(bool use_buzzer)
 void tune_negative(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_RED, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_RED, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_NEGATIVE_TUNE);
@@ -240,7 +241,7 @@ void tune_negative(bool use_buzzer)
 void tune_failsafe(bool use_buzzer)
 {
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
-	rgbled_set_color_and_mode(led_control_s::COLOR_PURPLE, led_control_s::MODE_BLINK_FAST);
+	rgbled_set_color_and_mode(led_control_s::COLOR_PURPLE, led_control_s::MODE_STATUS_BLINK_FAST);
 
 	if (use_buzzer) {
 		set_tune(TONE_BATTERY_WARNING_FAST_TUNE);
@@ -322,6 +323,16 @@ int led_off(int led)
 	return h_leds.ioctl(LED_OFF, led);
 }
 
+void set_led_fun_on_off_mask(uint8_t mask)
+{
+	led_fun_on_off_mask = mask;
+}
+
+uint8_t get_led_fun_on_off_mask(void)
+{
+	return led_fun_on_off_mask;
+}
+
 void rgbled_set_color_and_mode(uint8_t color, uint8_t mode, uint8_t blinks, uint8_t prio)
 {
 	led_control.mode = mode;
@@ -333,5 +344,8 @@ void rgbled_set_color_and_mode(uint8_t color, uint8_t mode, uint8_t blinks, uint
 }
 
 void rgbled_set_color_and_mode(uint8_t color, uint8_t mode){
-	rgbled_set_color_and_mode(color, mode, 0, 0);
+	if(get_led_fun_on_off_mask() == 1 && mode == led_control_s::MODE_STATUS_BLINK_FAST)
+		return;
+	else
+		rgbled_set_color_and_mode(color, mode, 0, 0);
 }

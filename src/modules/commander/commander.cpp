@@ -165,6 +165,8 @@ static constexpr uint8_t COMMANDER_MAX_GPS_NOISE = 60;		/**< Maximum percentage 
 #define POSVEL_PROBATION_MAX 100E6		/**< maximum probation duration (usec) */
 #define POSVEL_VALID_PROBATION_FACTOR 10	/**< the rate at which the probation duration is increased while checks are failing */
 
+#define SWARMLINK_NODE_SIZE 50
+
 /* Parameters controlling the sensitivity of the position failsafe */
 static int32_t posctl_nav_loss_delay = POSITION_TIMEOUT * (1000 * 1000);
 static int32_t posctl_nav_loss_prob = POSVEL_PROBATION_TAKEOFF * (1000 * 1000);
@@ -3221,6 +3223,7 @@ Commander::run()
 
 		arm_auth_update(now, params_updated || param_init_forced);
 
+		//unicast
 		orb_check(_swarm_link_light_control_receive_sub, &updated);
         if(updated)
         {
@@ -3243,9 +3246,68 @@ Commander::run()
 			{
 				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
 			}
+			else if((_light_control_receive.state & 0x0f) == 3)
+			{
+				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
+				if(rand_color_count < 100)
+				{
+					swarm_link_led_color = rand_color;
+				}
+				else if(rand_color_count == 100)
+				{
+					srand(hrt_absolute_time());
+					rand_color = rand() % 31;
+				}
+				
+				rand_color_count++;
+				if(rand_color_count == 100)
+				{
+					rand_color_count = 0;
+				}
+			}
+			else if((_light_control_receive.state & 0x0f) == 4)
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE;
+			}
+			else if((_light_control_receive.state & 0x0f) == 5)
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE;
+				if(rand_color_count < 100)
+				{
+					swarm_link_led_color = rand_color;
+				}
+				else if(rand_color_count == 100)
+				{
+					srand(hrt_absolute_time());
+					rand_color = rand() % 31;
+				}
+				
+				rand_color_count++;
+				if(rand_color_count == 100)
+				{
+					rand_color_count = 0;
+				}
+			}
+			else if((_light_control_receive.state & 0x0f) == 6)
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE_ON;
+			}
+			else if((_light_control_receive.state & 0x0f) == 7)
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE_OFF;
+			}
 			else
 			{
 				swarm_link_led_mode = led_control_s::MODE_OFF;
+			}
+
+			if((_light_control_receive.state & 0xf0) == 1)
+			{
+				set_led_fun_on_off_mask(1);//屏保状态灯
+			}
+			else
+			{
+				set_led_fun_on_off_mask(0);//打开状态灯
 			}
 			swarm_link_led_to_state_led = true;
 			if((last_swarm_link_led_mode != swarm_link_led_mode) || (last_swarm_link_led_color != swarm_link_led_color))
@@ -3263,7 +3325,7 @@ Commander::run()
 				status_changed = true;
 			}
 		}
-
+		//broadcast
 		orb_check(_swarm_link_broadcast_light_control_receive_sub, &updated);
         if(updated)
         {
@@ -3291,29 +3353,25 @@ Commander::run()
 			//选择灯光颜色
 			rst_swarmlink_led_color_select(_broadcast_light_control_receive.number[node_number]);
 			//选择灯光模式
-			if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 1)
+			if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 1)		//ON
 			{
 				swarm_link_led_mode = led_control_s::MODE_ON;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 2)
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 2)	//blink
 			{
 				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x03) == 3)
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 3)	//blink change color
 			{
-				if(rand_color_count < 49)
+				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
+				if(rand_color_count < 100)
 				{
 					swarm_link_led_color = rand_color;
-					swarm_link_led_mode = led_control_s::MODE_ON;
 				}
-				else if(rand_color_count == 49)
+				else if(rand_color_count == 100)
 				{
 					srand(hrt_absolute_time());
 					rand_color = rand() % 31;
-				}
-				else
-				{
-					swarm_link_led_mode = led_control_s::RST_SWARMLINK_RAND_BLINK_OFF;
 				}
 				
 				rand_color_count++;
@@ -3321,6 +3379,37 @@ Commander::run()
 				{
 					rand_color_count = 0;
 				}
+			}
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 4)	//breathe
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 5)	//breathe and change color
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE;
+				if(rand_color_count < 100)
+				{
+					swarm_link_led_color = rand_color;
+				}
+				else if(rand_color_count == 100)
+				{
+					srand(hrt_absolute_time());
+					rand_color = rand() % 31;
+				}
+				
+				rand_color_count++;
+				if(rand_color_count == 100)
+				{
+					rand_color_count = 0;
+				}
+			}
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 6)	//breatheon
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE_ON;
+			}
+			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 7)	//breatheoff
+			{
+				swarm_link_led_mode = led_control_s::MODE_BREATHE_OFF;
 			}
 			else
 			{
@@ -3345,14 +3434,38 @@ Commander::run()
 			}
 		}
 
-		if((((_light_control_receive.state >> 7) & 0x01) ==1) || (((_broadcast_light_control_receive.number[swarm_link_node_num - 1] >> 7) & 0x01) == 1))
+		// if((((_light_control_receive.state >> 7) & 0x01) ==1) || (((_broadcast_light_control_receive.number[swarm_link_node_num - 1] >> 7) & 0x01) == 1))
+		// {
+		// 	led_status_shut_down = true;
+		// }
+		// else
+		// {
+		// 	led_status_shut_down = false;
+		// }
+		if(((_light_control_receive.state & 0xf0) == 1) || (((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 1))
 		{
-			led_status_shut_down = true;
+			set_led_fun_on_off_mask(1);
+			led_status_shut_down = true;//屏保状态灯
 		}
 		else
 		{
+			set_led_fun_on_off_mask(0);
 			led_status_shut_down = false;
 		}
+
+		if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 0)	//normal
+		{
+			;//swarm_link_led_color.breathe_speed = 0;
+		}
+		else if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 1)	//slow
+		{
+			;//swarm_link_led_color.breathe_speed = 25 * 1000;
+		}
+		else if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 2)	//fast
+		{
+			;//swarm_link_led_color.breathe_speed = -10 * 1000;
+		}
+
 //		rgbled_set_color_and_mode(led_control_s::COLOR_BLUE, led_control_s::MODE_BLINK_NORMAL);
 
 		usleep(COMMANDER_MONITORING_INTERVAL);

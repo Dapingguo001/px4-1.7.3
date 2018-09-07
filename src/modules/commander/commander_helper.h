@@ -76,6 +76,8 @@ int led_toggle(int led);
 int led_on(int led);
 int led_off(int led);
 
+void set_led_fun_on_off_mask(uint8_t mask);
+uint8_t get_led_fun_on_off_mask(void);
 /**
  * set the LED color & mode
  * @param color @see led_control_s::COLOR_*

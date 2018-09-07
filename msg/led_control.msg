@@ -63,10 +63,10 @@ uint8 RST_SWARMLINK_MODE_BLINK_NORMAL = 9
 
 uint8 MODE_BREATHE_ON = 10
 uint8 MODE_BREATHE_OFF = 11
+uint8 MODE_STATUS_BLINK_FAST = 12
 
 
 uint8 MAX_PRIORITY = 2 # maxium priority (minimum is 0)
-
 
 uint8 led_mask # bitmask which LED(s) to control, set to 0xff for all
 uint8 color # see COLOR_*
