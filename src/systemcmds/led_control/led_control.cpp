@@ -82,6 +82,7 @@ $ led_control blink -c blue -l 0 -n 5
 	PRINT_MODULE_USAGE_PARAM_INT('n', 3, 1, 20, "Number of blinks", true);
 	PRINT_MODULE_USAGE_PARAM_STRING('s', "normal", "fast|normal|slow", "Set blinking speed", true);
 	PRINT_MODULE_USAGE_COMMAND_DESCR("breathe", "Continuously fade LED in & out");
+	PRINT_MODULE_USAGE_COMMAND_DESCR("breatheon", "Continuously fade LED in");
 	PRINT_MODULE_USAGE_COMMAND_DESCR("flash", "Two fast blinks and then off with frequency of 1Hz");
 
 	PRINT_MODULE_USAGE_PARAM_COMMENT("The following arguments apply to all of the above commands except for 'test':");
@@ -208,11 +209,14 @@ led_control_main(int argc, char *argv[])
 		case 's':
 			if (!strcmp(myoptarg, "fast")) {
 				blink_speed = led_control_s::MODE_BLINK_FAST;
+				led_control.breathe_speed = -10 * 1000;
 
 			} else if (!strcmp(myoptarg, "normal")) {
 				blink_speed = led_control_s::MODE_BLINK_NORMAL;
+				led_control.breathe_speed = 0;
 
 			} else if (!strcmp(myoptarg, "slow")) {
+				led_control.breathe_speed = 25 * 1000;
 				blink_speed = led_control_s::MODE_BLINK_SLOW;
 
 			} else {
@@ -263,7 +267,13 @@ led_control_main(int argc, char *argv[])
 	} else if (!strcmp(argv[myoptind], "flash")) {
 		led_control.mode = led_control_s::MODE_FLASH;
 
-	} else {
+	}else if (!strcmp(argv[myoptind], "breatheon")) {
+		led_control.mode = led_control_s::MODE_BREATHE_ON;
+
+	}else if (!strcmp(argv[myoptind], "breatheoff")) {
+		led_control.mode = led_control_s::MODE_BREATHE_OFF;
+
+	}else {
 		usage();
 		return 1;
 	}

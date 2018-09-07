@@ -61,6 +61,9 @@ uint8 MODE_FLASH = 7 # two fast blinks (on/off) with timing as in MODE_BLINK_FAS
 uint8 RST_SWARMLINK_RAND_BLINK_OFF = 8
 uint8 RST_SWARMLINK_MODE_BLINK_NORMAL = 9
 
+uint8 MODE_BREATHE_ON = 10
+uint8 MODE_BREATHE_OFF = 11
+
 
 uint8 MAX_PRIORITY = 2 # maxium priority (minimum is 0)
 
@@ -71,3 +74,4 @@ uint8 mode # see MODE_*
 uint8 num_blinks # how many times to blink (number of on-off cycles if mode is one of MODE_BLINK_*) . Set to 0 for infinite
                  # in MODE_FLASH it is the number of cycles (infinite is not possible)
 uint8 priority # priority: higher priority events will override current lower priority events (see MAX_PRIORITY)
+int16 breathe_speed

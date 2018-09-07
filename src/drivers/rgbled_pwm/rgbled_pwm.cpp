@@ -80,6 +80,7 @@ public:
 	virtual int		init();
 	virtual int		probe();
 	int		status();
+	void 	test();
 
 private:
 	work_s			_work;
@@ -88,6 +89,7 @@ private:
 	uint8_t			_g;
 	uint8_t			_b;
 	float			_brightness;
+	float			_max_brightness;
 
 	volatile bool		_running;
 	volatile bool		_should_run;
@@ -121,6 +123,7 @@ RGBLED_PWM::RGBLED_PWM() :
 	_g(0),
 	_b(0),
 	_brightness(1.0f),
+	_max_brightness(1.0f),
 	_running(false),
 	_should_run(true)
 {
@@ -376,7 +379,9 @@ RGBLED_PWM::led()
 			_r = 0; _g = 0; _b = 0;			
 			break;
 		}
-		_brightness = (float)led_control_data.leds[0].brightness / 255.f;
+		// ::printf("brightness[%d]\n",led_control_data.leds[0].brightness);
+		_brightness = (float)(led_control_data.leds[0].brightness / 255.00f);
+		// ::printf("_brightness[%f]\n",(double)_brightness);
 
 		send_led_rgb();
 	}
@@ -392,6 +397,10 @@ RGBLED_PWM::led()
 int
 RGBLED_PWM::send_led_rgb()
 {
+	_r = static_cast<uint8_t>((_r) * _brightness * _max_brightness + 0.5f);
+	_g = static_cast<uint8_t>((_g) * _brightness * _max_brightness + 0.5f);
+	_b = static_cast<uint8_t>((_b) * _brightness * _max_brightness + 0.5f);
+	// ::printf("r[%d] g[%d] b[%d]\n",_r,_g,_b);
 #if defined(BOARD_HAS_LED_PWM)
 	led_pwm_servo_set(0, _r);
 	led_pwm_servo_set(1, _g);
@@ -405,6 +414,30 @@ RGBLED_PWM::send_led_rgb()
 #endif
 
 	return (OK);
+}
+void RGBLED_PWM::test()
+{	
+	int i;
+	for(i=0;i<25;i++)
+	{
+		_r = i*10;
+		_g = 0;
+		_b = 0;
+		send_led_rgb();
+		::printf("r[%d]\n",_r);
+		usleep(10000);
+	}
+	usleep(1000000);
+		::printf("r[%d]\n",_r);
+	for(i=0;i<25;i++)
+	{
+		_r = 255 - i*10;
+		_g = 0;
+		_b = 0;
+		send_led_rgb();
+		::printf("r[%d]\n",_r);
+		usleep(10000);
+	}
 }
 
 int
@@ -482,6 +515,11 @@ rgbled_pwm_main(int argc, char *argv[])
 
 	if (!strcmp(verb, "status")) {
 		g_rgbled->status();
+		exit(0);
+	}
+
+	if (!strcmp(verb, "test")) {
+		g_rgbled->test();
 		exit(0);
 	}
 
