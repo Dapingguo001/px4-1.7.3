@@ -1588,6 +1588,7 @@ Commander::run()
 	struct rst_swarm_link_light_control_receive_s _light_control_receive;
 	memset(&_light_control_receive, 0, sizeof(_light_control_receive));
 	uint8_t swarm_link_led_mode = 0;
+	// bool swarm_link_control = false;
 
 	uint8_t last_swarm_link_led_mode = 0;
 	uint8_t last_swarm_link_led_color = 0;
@@ -3232,8 +3233,8 @@ Commander::run()
 
 			memset(&_broadcast_light_control_receive, 0, sizeof(_broadcast_light_control_receive));
 		}
-		
-		if(((_light_control_receive.state >> 7) & 0x01) ==1)
+
+		if(((_light_control_receive.state >> 7) & 0x01) == 1)
 		{
 			//选择灯光颜色
 			rst_swarmlink_led_color_select(_light_control_receive.red);
@@ -3244,26 +3245,25 @@ Commander::run()
 			}
 			else if((_light_control_receive.state & 0x0f) == 2)
 			{
-				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
+				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;//RST_SWARMLINK_MODE_BLINK_NORMAL;
 			}
 			else if((_light_control_receive.state & 0x0f) == 3)
 			{
 				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
-				if(rand_color_count < 100)
+				if(rand_color_count < 199)
 				{
 					swarm_link_led_color = rand_color;
 				}
-				else if(rand_color_count == 100)
+				else if(rand_color_count >= 199)
 				{
 					srand(hrt_absolute_time());
 					rand_color = rand() % 31;
 				}
-				
-				rand_color_count++;
-				if(rand_color_count == 100)
+				if(rand_color_count >= 199)
 				{
 					rand_color_count = 0;
 				}
+				rand_color_count++;
 			}
 			else if((_light_control_receive.state & 0x0f) == 4)
 			{
@@ -3272,21 +3272,20 @@ Commander::run()
 			else if((_light_control_receive.state & 0x0f) == 5)
 			{
 				swarm_link_led_mode = led_control_s::MODE_BREATHE;
-				if(rand_color_count < 100)
+				if(rand_color_count < 199)
 				{
 					swarm_link_led_color = rand_color;
 				}
-				else if(rand_color_count == 100)
+				else if(rand_color_count >= 199)
 				{
 					srand(hrt_absolute_time());
 					rand_color = rand() % 31;
 				}
-				
-				rand_color_count++;
-				if(rand_color_count == 100)
+				if(rand_color_count >= 199)
 				{
 					rand_color_count = 0;
 				}
+				rand_color_count++;
 			}
 			else if((_light_control_receive.state & 0x0f) == 6)
 			{
@@ -3301,14 +3300,6 @@ Commander::run()
 				swarm_link_led_mode = led_control_s::MODE_OFF;
 			}
 
-			if((_light_control_receive.state & 0xf0) == 1)
-			{
-				set_led_fun_on_off_mask(1);//屏保状态灯
-			}
-			else
-			{
-				set_led_fun_on_off_mask(0);//打开状态灯
-			}
 			swarm_link_led_to_state_led = true;
 			if((last_swarm_link_led_mode != swarm_link_led_mode) || (last_swarm_link_led_color != swarm_link_led_color))
 			{
@@ -3334,7 +3325,8 @@ Commander::run()
 
 			memset(&_light_control_receive, 0, sizeof(_light_control_receive));
 		}
-		if(((_broadcast_light_control_receive.number[swarm_link_node_num - 1] >> 7) & 0x01) == 1)
+
+		if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE] >> 7) & 0x01) == 1)
 		{
 			if(swarm_link_node_num <51)
 			{
@@ -3353,61 +3345,59 @@ Commander::run()
 			//选择灯光颜色
 			rst_swarmlink_led_color_select(_broadcast_light_control_receive.number[node_number]);
 			//选择灯光模式
-			if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 1)		//ON
+			if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 1)		//ON
 			{
 				swarm_link_led_mode = led_control_s::MODE_ON;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 2)	//blink
+			else if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 2)	//blink
 			{
 				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 3)	//blink change color
+			else if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 3)	//blink change color
 			{
 				swarm_link_led_mode = led_control_s::RST_SWARMLINK_MODE_BLINK_NORMAL;
-				if(rand_color_count < 100)
+				if(rand_color_count < 199)
 				{
 					swarm_link_led_color = rand_color;
 				}
-				else if(rand_color_count == 100)
+				else if(rand_color_count >= 199)
 				{
 					srand(hrt_absolute_time());
 					rand_color = rand() % 31;
 				}
-				
-				rand_color_count++;
-				if(rand_color_count == 100)
+				if(rand_color_count >= 199)
 				{
 					rand_color_count = 0;
 				}
+				rand_color_count++;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 4)	//breathe
+			else if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 4)	//breathe
 			{
 				swarm_link_led_mode = led_control_s::MODE_BREATHE;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 5)	//breathe and change color
+			else if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 5)	//breathe and change color
 			{
 				swarm_link_led_mode = led_control_s::MODE_BREATHE;
-				if(rand_color_count < 100)
+				if(rand_color_count < 199)
 				{
 					swarm_link_led_color = rand_color;
 				}
-				else if(rand_color_count == 100)
+				else if(rand_color_count >= 199)
 				{
 					srand(hrt_absolute_time());
 					rand_color = rand() % 31;
 				}
-				
-				rand_color_count++;
-				if(rand_color_count == 100)
+				if(rand_color_count >= 199)
 				{
 					rand_color_count = 0;
 				}
+				rand_color_count++;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 6)	//breatheon
+			else if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 6)	//breatheon
 			{
 				swarm_link_led_mode = led_control_s::MODE_BREATHE_ON;
 			}
-			else if((_broadcast_light_control_receive.number[node_number] >> 5 & 0x07) == 7)	//breatheoff
+			else if(((_broadcast_light_control_receive.number[node_number] >> 5) & 0x07) == 7)	//breatheoff
 			{
 				swarm_link_led_mode = led_control_s::MODE_BREATHE_OFF;
 			}
@@ -3434,15 +3424,7 @@ Commander::run()
 			}
 		}
 
-		// if((((_light_control_receive.state >> 7) & 0x01) ==1) || (((_broadcast_light_control_receive.number[swarm_link_node_num - 1] >> 7) & 0x01) == 1))
-		// {
-		// 	led_status_shut_down = true;
-		// }
-		// else
-		// {
-		// 	led_status_shut_down = false;
-		// }
-		if(((_light_control_receive.state & 0xf0) == 1) || (((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 1))
+		if((((_light_control_receive.state >> 7) & 0x01) == 1) || ((((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) >> 7) & 0x01) == 1))
 		{
 			set_led_fun_on_off_mask(1);
 			led_status_shut_down = true;//屏保状态灯
@@ -3453,15 +3435,15 @@ Commander::run()
 			led_status_shut_down = false;
 		}
 
-		if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 0)	//normal
+		if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0x0f) == 0)	//normal
 		{
 			;//swarm_link_led_color.breathe_speed = 0;
 		}
-		else if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 1)	//slow
+		else if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0x0f) == 1)	//slow
 		{
 			;//swarm_link_led_color.breathe_speed = 25 * 1000;
 		}
-		else if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0xf0) == 2)	//fast
+		else if(((_broadcast_light_control_receive.number[SWARMLINK_NODE_SIZE]) & 0x0f) == 2)	//fast
 		{
 			;//swarm_link_led_color.breathe_speed = -10 * 1000;
 		}

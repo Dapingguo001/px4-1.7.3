@@ -1628,6 +1628,7 @@ MavlinkReceiver::handle_message_rst_broadcast_light_control(mavlink_message_t *m
 	_broadcast_light_control_receive.number[47] = broadcastcast_light_control.number48;
 	_broadcast_light_control_receive.number[48] = broadcastcast_light_control.number49;
 	_broadcast_light_control_receive.number[49] = broadcastcast_light_control.number50;
+	_broadcast_light_control_receive.number[50] = broadcastcast_light_control.number51;
 
 	orb_publish(ORB_ID(rst_swarm_link_broadcast_light_control_receive), 
 			_swarm_link_broadcast_light_control_receive_pub, &_broadcast_light_control_receive);
