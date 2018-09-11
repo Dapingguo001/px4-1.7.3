@@ -248,131 +248,131 @@ RGBLED_PWM::led()
 		Time:2018/7/30
 		********************************************/
 		case led_control_s::RST_COLOR_1:
-			_r = 255; _g = 0; _b = 0;
+			_r = 255; _g = 255; _b = 255;
 			break;
 		
 		case led_control_s::RST_COLOR_2:
-			_r = 255; _g = 51; _b = 51;
+			_r = 255; _g = 255; _b = 0;
 			break;
 
 		case led_control_s::RST_COLOR_3:
-			_r = 255; _g = 128; _b = 0;
+			_r = 255; _g = 200; _b = 0;
 			break;
 
 		case led_control_s::RST_COLOR_4:
-			_r = 255; _g = 128; _b = 128;
+			_r = 255; _g = 150; _b = 0;
 			break;
 		
 		case led_control_s::RST_COLOR_5:
-			_r = 255; _g = 204; _b = 51;
+			_r = 255; _g = 100; _b = 0;
 			break;
 
 		case led_control_s::RST_COLOR_6:
-			_r = 255; _g = 204; _b = 102;
+			_r = 255; _g = 50; _b = 0;
 			break;
 			
 		case led_control_s::RST_COLOR_7:
-			_r = 255; _g = 255; _b = 0;
+			_r = 255; _g = 0; _b = 0;
 			break;
 		
 		case led_control_s::RST_COLOR_8:
-			_r = 204; _g = 255; _b = 0;
+			_r = 200; _g = 255; _b = 0;
 			break;
 
 		case led_control_s::RST_COLOR_9:
-			_r = 204; _g = 255; _b = 153;
+			_r = 150; _g = 255; _b = 0;
 			break;
 
 		case led_control_s::RST_COLOR_10:
-			_r = 0; _g = 128; _b = 0;
+			_r = 100; _g = 255; _b = 0;
 			break;
 		/**************************************************/
 		case led_control_s::RST_COLOR_11:
-			_r = 0; _g = 189; _b = 0;
+			_r = 50; _g = 255; _b = 0;
 			break;
 		
 		case led_control_s::RST_COLOR_12:
-			_r = 51; _g = 204; _b = 102;
-			break;
-
-		case led_control_s::RST_COLOR_13:
 			_r = 0; _g = 255; _b = 0;
 			break;
 
-		case led_control_s::RST_COLOR_14:
-			_r = 0; _g = 255; _b = 255;
-			break;
-		
-		case led_control_s::RST_COLOR_15:
-			_r = 64; _g = 224; _b = 208;
-			break;
-
-		case led_control_s::RST_COLOR_16:
-			_r = 0; _g = 0; _b = 255;
-			break;
-			
-		case led_control_s::RST_COLOR_17:
-			_r = 51; _g = 153; _b = 204;
-			break;
-		
-		case led_control_s::RST_COLOR_18:
-			_r = 0; _g = 153; _b = 255;
-			break;
-
-		case led_control_s::RST_COLOR_19:
-			_r = 102; _g = 153; _b = 255;
-			break;
-
-		case led_control_s::RST_COLOR_20:
-			_r = 102; _g = 102; _b = 255;
-			break;
-		/************************************************/
-		case led_control_s::RST_COLOR_21:
-			_r = 51; _g = 102; _b = 255;
-			break;
-		
-		case led_control_s::RST_COLOR_22:
-			_r = 128; _g = 0; _b = 128;
-			break;
-
-		case led_control_s::RST_COLOR_23:
-			_r = 153; _g = 0; _b = 255;
-			break;
-
-		case led_control_s::RST_COLOR_24:
-			_r = 102; _g = 0; _b = 255;
-			break;
-		
-		case led_control_s::RST_COLOR_25:
+		case led_control_s::RST_COLOR_13:
 			_r = 255; _g = 0; _b = 255;
 			break;
 
+		case led_control_s::RST_COLOR_14:
+			_r = 255; _g = 0; _b = 200;
+			break;
+		
+		case led_control_s::RST_COLOR_15:
+			_r = 255; _g = 0; _b = 150;
+			break;
+
+		case led_control_s::RST_COLOR_16:
+			_r = 255; _g = 0; _b = 100;
+			break;
+			
+		case led_control_s::RST_COLOR_17:
+			_r = 255; _g = 0; _b = 50;
+			break;
+		
+		case led_control_s::RST_COLOR_18:
+			_r = 255; _g = 10; _b = 10;
+			break;
+
+		case led_control_s::RST_COLOR_19:
+			_r = 200; _g = 0; _b = 255;
+			break;
+
+		case led_control_s::RST_COLOR_20:
+			_r = 150; _g = 0; _b = 255;
+			break;
+		/************************************************/
+		case led_control_s::RST_COLOR_21:
+			_r = 100; _g = 0; _b = 255;
+			break;
+		
+		case led_control_s::RST_COLOR_22:
+			_r = 50; _g = 0; _b = 255;
+			break;
+
+		case led_control_s::RST_COLOR_23:
+			_r = 0; _g = 0; _b = 255;
+			break;
+
+		case led_control_s::RST_COLOR_24:
+			_r = 0; _g = 255; _b = 255;
+			break;
+		
+		case led_control_s::RST_COLOR_25:
+			_r = 0; _g = 255; _b = 200;
+			break;
+
 		case led_control_s::RST_COLOR_26:
-			_r = 204; _g = 102; _b = 255;
+			_r = 0; _g = 255; _b = 150;
 			break;
 			
 		case led_control_s::RST_COLOR_27:
-			_r = 255; _g = 128; _b = 192;
+			_r = 0; _g = 255; _b = 100;
 			break;
 		
 		case led_control_s::RST_COLOR_28:
-			_r = 153; _g = 153; _b = 102;
+			_r = 0; _g = 255; _b = 50;
 			break;
 
 		case led_control_s::RST_COLOR_29:
-			_r = 64; _g = 64; _b = 128;
+			_r = 0; _g = 200; _b = 255;
 			break;
 
 		case led_control_s::RST_COLOR_30:
-			_r = 255; _g = 108; _b = 108;
+			_r = 0; _g = 150; _b = 255;
 			break;
 		///////////////////////////////////////////
 		case led_control_s::RST_COLOR_31:
-			_r = 153; _g = 102; _b = 0;
+			_r = 0; _g = 100; _b = 255;
 			break;
 
 		case led_control_s::RST_COLOR_32:
-			_r = 255; _g = 255; _b = 255;
+			_r = 0; _g = 50; _b = 255;
 			break;		
 
 		default: // led_control_s::COLOR_OFF
