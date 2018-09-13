@@ -56,7 +56,8 @@
  * @increment 0.01
  * @reboot_required true
  */
-PARAM_DEFINE_FLOAT(BAT_V_EMPTY, 3.4f);
+//PARAM_DEFINE_FLOAT(BAT_V_EMPTY, 3.4f);
+PARAM_DEFINE_FLOAT(BAT_V_EMPTY, 3.5f);  //by rst-033
 
 /**
  * Full cell voltage (5C load)

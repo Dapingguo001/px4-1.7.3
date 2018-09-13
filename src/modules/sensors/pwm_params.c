@@ -66,7 +66,8 @@ PARAM_DEFINE_INT32(PWM_RATE, 400);
  * @unit us
  * @group PWM Outputs
  */
-PARAM_DEFINE_INT32(PWM_MIN, 1000);
+//PARAM_DEFINE_INT32(PWM_MIN, 1000);
+PARAM_DEFINE_INT32(PWM_MIN, 1100);//by rst-033
 
 /**
  * Set the maximum PWM for the main outputs

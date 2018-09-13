@@ -329,7 +329,8 @@ PARAM_DEFINE_FLOAT(MPC_TILTMAX_LND, 12.0f);
  * @decimal 1
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_LAND_SPEED, 0.7f);
+//PARAM_DEFINE_FLOAT(MPC_LAND_SPEED, 0.7f);
+PARAM_DEFINE_FLOAT(MPC_LAND_SPEED, 1.5f);   //by rst-033
 
 /**
  * Takeoff climb rate
