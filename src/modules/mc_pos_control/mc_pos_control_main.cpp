@@ -301,19 +301,11 @@ private:
 
 	float _takeoff_vel_limit; /**< velocity limit value which gets ramped up */
 
-	uint64_t gps_time = 0;
-	uint64_t gps_time_last = 0;
-	uint64_t gps_time_delta = 0;
-
-	uint64_t mcu_time = 0;
-	uint64_t mcu_time_last = 0;
-	uint64_t mcu_time_delta = 0;
-
-	uint64_t global_time = 0;
-	uint64_t global_time_last = 0;
-	uint64_t global_time_delta = 0;
-
-	bool     global_time_start = false;
+	bool     _global_syn_time_start = false;
+	uint64_t _global_syn_time;
+	uint64_t _last_hrt_absolute_time;
+	bool     _global_syn_time_valid = false;
+	uint64_t _last_global_syn_time_start = 0;
 
 	// counters for reset events on position and velocity states
 	// they are used to identify a reset event
@@ -327,6 +319,8 @@ private:
 	 * Update our local parameter cache.
 	 */
 	int		parameters_update(bool force);
+
+	void  calculate_global_syn_time();
 
 	/**
 	 * Check for changes in subscribed topics.
@@ -728,6 +722,43 @@ MulticopterPositionControl::parameters_update(bool force)
 }
 
 void
+MulticopterPositionControl::calculate_global_syn_time()
+{
+	static bool gps_updated = false;
+	orb_check(_gps_position_sub, &gps_updated);
+
+	if(gps_updated)
+	{
+		orb_copy(ORB_ID(vehicle_gps_position), _gps_position_sub, &_gps_position);
+
+		if(_gps_position.fix_type > 2)
+		{
+			_global_syn_time_start = true;
+			_last_hrt_absolute_time = hrt_absolute_time();
+		}
+
+	}
+	
+	if(_global_syn_time_start)
+	{
+		_global_syn_time = (_gps_position.time_utc_usec + hrt_absolute_time() - _gps_position.timestamp)/1000;
+		_global_syn_time_valid = true;
+		if((hrt_absolute_time() - _last_hrt_absolute_time) > 3 * 1000 * 1000)
+		{
+			_global_syn_time_valid = false;
+		}
+	}
+
+	if(_global_syn_time_valid)
+	{
+//		::printf("yuwenbin...test...global_syn_time...%lld\n",_global_syn_time);
+		_last_global_syn_time_start = _global_syn_time;
+	}
+
+//	return 0;
+}
+
+void
 MulticopterPositionControl::poll_subscriptions()
 {
 	bool updated;
@@ -844,36 +875,6 @@ MulticopterPositionControl::poll_subscriptions()
 	if (updated) {
 		orb_copy(ORB_ID(home_position), _home_pos_sub, &_home_pos);
 	}
-
-	orb_check(_gps_position_sub, &updated);
-	
-	if (updated) {
-		orb_copy(ORB_ID(vehicle_gps_position), _gps_position_sub, &_gps_position);
-		if(!global_time_start && _gps_position.fix_type > 4)
-		{
-			global_time_start = true;
-			gps_time_last = gps_time = _gps_position.time_utc_usec;
-			mcu_time_last = mcu_time = hrt_absolute_time();
-
-			global_time = _gps_position.time_utc_usec;
-		}
-		else
-		{
-			gps_time_delta = _gps_position.time_utc_usec - gps_time_last;
-			gps_time_last = _gps_position.time_utc_usec;
-		}
-	}
-
-/*	if(global_time_start)
-	{
-		mcu_time_delta = hrt_absolute_time() - mcu_time_last;
-		mcu_time_last = hrt_absolute_time();
-		
-		global_time = gps_time + mcu_time_delta + 
-	}*/
-
-
-
 
 }
 
@@ -3089,6 +3090,8 @@ MulticopterPositionControl::task_main()
 		}
 
 		poll_subscriptions();
+
+		calculate_global_syn_time();
 
 		parameters_update(false);
 

@@ -82,6 +82,7 @@
 #include <uORB/topics/mavlink_log.h>
 #include <uORB/topics/rst_swarm_link_light_control_component.h>
 #include <uORB/topics/rst_swarm_link_fc_statue_send.h>
+#include <uORB/topics/vehicle_gps_position.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_main.h"
@@ -1785,6 +1786,42 @@ Mavlink::update_rate_mult()
 	_rate_mult = fmaxf(0.05f, _rate_mult);
 }
 
+void
+Mavlink::calculate_global_syn_time()
+{
+	static bool gps_updated = false;
+	orb_check(_gps_position_sub, &gps_updated);
+
+	if(gps_updated)
+	{
+		orb_copy(ORB_ID(vehicle_gps_position), _gps_position_sub, &_gps_position);
+
+		if(_gps_position.fix_type > 2)
+		{
+			_global_syn_time_start = true;
+			_last_hrt_absolute_time = hrt_absolute_time();
+		}
+
+	}
+	
+	if(_global_syn_time_start)
+	{
+		_global_syn_time = (_gps_position.time_utc_usec + hrt_absolute_time() - _gps_position.timestamp)/1000;
+		_global_syn_time_valid = true;
+		if((hrt_absolute_time() - _last_hrt_absolute_time) > 10 * 1000 * 1000)
+		{
+			_global_syn_time_valid = false;
+		}
+//		::printf("yuwenbin......_global_syn_time_start\n");
+	}
+
+	if(_global_syn_time_valid)
+	{
+//		::printf("yuwenbin...test...global_syn_time...%lld\n",_global_syn_time);
+		_last_global_syn_time_start = _global_syn_time;
+	}
+}
+
 int
 Mavlink::task_main(int argc, char *argv[])
 {
@@ -2223,9 +2260,13 @@ Mavlink::task_main(int argc, char *argv[])
 	/* start the MAVLink receiver last to avoid a race */
 	MavlinkReceiver::receive_start(&_receive_thread, this);
 
+	_gps_position_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
+
 	while (!_task_should_exit) {
 		/* main loop */
 		usleep(_main_loop_delay);
+
+		calculate_global_syn_time();
 
 		perf_begin(_loop_perf);
 

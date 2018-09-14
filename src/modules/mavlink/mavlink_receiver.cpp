@@ -365,6 +365,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		handle_message_rst_broadcast_light_control(msg);
 		break;
 
+	case MAVLINK_MSG_ID_RST_GLOBAL_SYN_TIME:
+		handle_message_rst_global_syn_time(msg);
+		break;
+
 	default:
 		break;
 	}
@@ -1634,6 +1638,21 @@ MavlinkReceiver::handle_message_rst_broadcast_light_control(mavlink_message_t *m
 			_swarm_link_broadcast_light_control_receive_pub, &_broadcast_light_control_receive);
 
 }
+
+void 
+MavlinkReceiver::handle_message_rst_global_syn_time(mavlink_message_t *msg)
+{
+	mavlink_rst_global_syn_time_t global_syn_time;
+	mavlink_msg_rst_global_syn_time_decode(msg, &global_syn_time);
+	if(global_syn_time.request_time != 0)
+	{
+		global_syn_time.global_syn_time = 0;
+		global_syn_time.global_syn_time = _mavlink->get_global_syn_time();
+		mavlink_msg_rst_global_syn_time_send_struct(_mavlink->get_channel(), &global_syn_time);
+	}
+
+}
+
 
 switch_pos_t
 MavlinkReceiver::decode_switch_pos(uint16_t buttons, unsigned sw)

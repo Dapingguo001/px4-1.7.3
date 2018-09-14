@@ -172,6 +172,7 @@ private:
 	void handle_message_rst_light_control(mavlink_message_t *msg);
 	void handle_message_rst_fc_statue(mavlink_message_t *msg);
 	void handle_message_rst_broadcast_light_control(mavlink_message_t *msg);
+	void handle_message_rst_global_syn_time(mavlink_message_t *msg);
 
 	/**
 	 * Set the interval at which the given message stream is published.
