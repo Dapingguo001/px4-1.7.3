@@ -1808,7 +1808,7 @@ Mavlink::calculate_global_syn_time()
 	{
 		_global_syn_time = (_gps_position.time_utc_usec + hrt_absolute_time() - _gps_position.timestamp)/1000;
 		_global_syn_time_valid = true;
-		if((hrt_absolute_time() - _last_hrt_absolute_time) > 10 * 1000 * 1000)
+		if((hrt_absolute_time() - _last_hrt_absolute_time) > 60 * 1000 * 1000)
 		{
 			_global_syn_time_valid = false;
 		}

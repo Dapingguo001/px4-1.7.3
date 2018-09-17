@@ -497,7 +497,16 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 		.source_system = msg->sysid,
 		.source_component = msg->compid,
 		.confirmation = cmd_mavlink.confirmation,
-		.from_external = true
+		.from_external = true,
+
+		.task_start_global_syn_time1 = (uint8_t)(cmd_mavlink.move_global_syn_time & 0x00000000000000FF),
+		.task_start_global_syn_time2 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 8 & 0x00000000000000FF),
+		.task_start_global_syn_time3 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 16 & 0x00000000000000FF),
+		.task_start_global_syn_time4 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 24 & 0x00000000000000FF),
+		.task_start_global_syn_time5 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 32 & 0x00000000000000FF),
+		.task_start_global_syn_time6 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 40 & 0x00000000000000FF),
+		.task_start_global_syn_time7 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 48 & 0x00000000000000FF),
+		.task_start_global_syn_time8 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 56 & 0x00000000000000FF),
 	};
 	handle_message_command_both(msg, cmd_mavlink, vcmd);
 }

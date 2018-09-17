@@ -336,6 +336,36 @@ private:
 	float _mission_cruising_speed_fw{-1.0f};
 	float _mission_throttle{-1.0f};
 
+	bool _gps_syn_time_update = false;
+	bool _global_syn_vehicle_command_update = false;
+
+	bool     _global_syn_time_start = false;
+	uint64_t _global_syn_time;           //单位：ms
+	uint64_t _last_hrt_absolute_time;
+	bool     _global_syn_time_valid = false;
+	uint64_t _last_global_syn_time_start = 0;
+	
+
+	struct global_system_syn_task{
+		uint64_t task_start_time;
+		NavigatorMode *navigation_mode_new{nullptr};
+		position_setpoint_triplet_s pos_set_triplet;   //位置设定点
+		uint8_t  error_type;                           //错误类型 0：无错误 ......
+	}_global_system_syn_task;
+
+	global_system_syn_task _global_system_syn_task_cur{};
+	global_system_syn_task _global_system_syn_task_pre{};
+
+	uint8_t  _delay_syn_task_number = 0;
+	bool     _instant_syn_task = false;
+
+	bool     _carry_out_global_syn_task = false;
+	uint64_t _delay_get_navigator_mode;
+	bool     _get_delay_navigator_mode;
+
+	vehicle_command_s _global_syn_task_cmd;
+	NavigatorMode *_global_syn_navigation_mode_new{nullptr};
+
 	// update subscriptions
 	void		fw_pos_ctrl_status_update(bool force = false);
 	void		global_position_update();
@@ -368,5 +398,8 @@ private:
 	void		publish_mission_result();
 
 	void		publish_vehicle_command_ack(const vehicle_command_s &cmd, uint8_t result);
+
+	void  calculate_global_syn_time();
+	void  global_syn_task_scheduler();
 };
 #endif

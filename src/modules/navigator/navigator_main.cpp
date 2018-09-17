@@ -67,6 +67,8 @@
 #include <uORB/topics/vehicle_command_ack.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/transponder_report.h>
+#include <uORB/topics/vehicle_gps_position.h>
+
 #include <uORB/uORB.h>
 
 /**
@@ -294,7 +296,7 @@ Navigator::task_main()
 		perf_begin(_loop_perf);
 
 		bool updated;
-
+		_gps_syn_time_update = false;
 		/* gps updated */
 		orb_check(_gps_pos_sub, &updated);
 
@@ -304,6 +306,7 @@ Navigator::task_main()
 			if (_geofence.getSource() == Geofence::GF_SOURCE_GPS) {
 				have_geofence_position_data = true;
 			}
+			_gps_syn_time_update = true;
 		}
 
 		/* global position updated */
@@ -358,13 +361,16 @@ Navigator::task_main()
 		if (updated) {
 			home_position_update();
 		}
-
+		_global_syn_vehicle_command_update = false;
 		/* vehicle_command updated */
 		orb_check(_vehicle_command_sub, &updated);
 
 		if (updated) {
+			_global_syn_vehicle_command_update = true;
 			vehicle_command_s cmd;
 			orb_copy(ORB_ID(vehicle_command), _vehicle_command_sub, &cmd);
+
+			memcpy(&_global_syn_task_cmd, &cmd, sizeof(cmd));
 
 			if (cmd.command == vehicle_command_s::VEHICLE_CMD_DO_GO_AROUND) {
 
@@ -683,6 +689,18 @@ Navigator::task_main()
 			break;
 		}
 
+		_global_syn_navigation_mode_new = navigation_mode_new;
+		calculate_global_syn_time();
+		global_syn_task_scheduler();
+
+		if(_carry_out_global_syn_task)
+		{
+			memcpy(&_pos_sp_triplet, &_global_system_syn_task.pos_set_triplet, sizeof(_global_system_syn_task.pos_set_triplet));
+			_pos_sp_triplet_published_invalid_once = false;
+			_carry_out_global_syn_task = false;
+		}
+		navigation_mode_new = _global_system_syn_task.navigation_mode_new;
+
 		/* we have a new navigation mode: reset triplet */
 		if (_navigation_mode != navigation_mode_new) {
 			reset_triplets();
@@ -743,6 +761,99 @@ Navigator::task_main()
 	PX4_INFO("exiting");
 
 	_navigator_task = -1;
+}
+
+void
+Navigator::calculate_global_syn_time()
+{
+	if(_gps_syn_time_update)
+	{
+		if(_gps_pos.fix_type > 2)
+		{
+			_global_syn_time_start = true;
+			_last_hrt_absolute_time = hrt_absolute_time();
+		}
+
+	}
+	
+	if(_global_syn_time_start)
+	{
+		_global_syn_time = (_gps_pos.time_utc_usec + hrt_absolute_time() - _gps_pos.timestamp)/1000;
+		_global_syn_time_valid = true;
+		if((hrt_absolute_time() - _last_hrt_absolute_time) > 60 * 1000 * 1000)
+		{
+			_global_syn_time_valid = false;
+		}
+	}
+
+	if(_global_syn_time_valid)
+	{
+//		::printf("yuwenbin...test...global_syn_time...%lld\n",_global_syn_time);
+		_last_global_syn_time_start = _global_syn_time;
+	}
+
+//	return 0;
+}
+
+void
+Navigator::global_syn_task_scheduler()
+{
+	/**********************获取导航数据包中的数据*****************************/
+	if(_global_syn_vehicle_command_update)
+	{
+		_delay_get_navigator_mode = hrt_absolute_time();
+		//获取目标航点信息
+		_global_system_syn_task_cur.task_start_time = ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time8) << 7) | ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time7) << 6) |
+		((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time6) << 5) | ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time5) << 4) |
+		((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time4) << 3) | ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time3) << 2) |
+		((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time2) << 1) | (uint64_t)(_global_syn_task_cmd.task_start_global_syn_time1);
+
+		memcpy(&_global_system_syn_task_cur.pos_set_triplet, &_pos_sp_triplet, sizeof(_pos_sp_triplet));
+		_global_system_syn_task_cur.error_type = 0; 
+		_get_delay_navigator_mode = false;
+		/************************判断任务类型*******************************************/
+		if(_global_system_syn_task_cur.task_start_time != 0)  //延时执行的任务
+		{
+			_delay_syn_task_number = _delay_syn_task_number + 1;
+		}
+		else
+		{
+			_instant_syn_task = true;
+		}
+	}
+
+	//航点命令获取后，延迟200ms,获取系统导航模式命令
+	if(!_get_delay_navigator_mode && (_delay_get_navigator_mode + 200 * 1000 < hrt_absolute_time()))
+	{
+		_global_system_syn_task_cur.navigation_mode_new = _global_syn_navigation_mode_new;
+		_get_delay_navigator_mode = true;
+	}
+
+	/**************************立即执行的任务***********************************/
+	if(_instant_syn_task && _get_delay_navigator_mode)
+	{
+		_carry_out_global_syn_task = true;
+		_instant_syn_task = false;
+	}
+
+	/***************************延时执行的任务**********************************/
+	if(_delay_syn_task_number && _get_delay_navigator_mode)//收到延迟执行的任务
+	{
+		if(!_global_syn_time_valid)//如果global_syn_time无效，取消延迟任务
+		{
+			_delay_syn_task_number = 0;
+		}
+
+		if(fabs(_global_system_syn_task.task_start_time - _global_syn_time) <=  25)
+		{ 
+			_carry_out_global_syn_task = true;
+			_delay_syn_task_number = _delay_syn_task_number - 1;
+		}
+
+	}
+
+	/****************************任务执行*******************************/
+
 }
 
 int
