@@ -66,6 +66,7 @@
 #include <uORB/topics/rst_swarm_link_light_control_component.h>
 #include <uORB/topics/rst_swarm_link_fc_statue_send.h>
 #include <uORB/topics/vehicle_gps_position.h>
+#include <uORB/topics/rst_insert_global_syn_task_debug.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_orb_subscription.h"
@@ -638,13 +639,12 @@ private:
 
 	int configure_stream(const char *stream_name, const float rate = -1.0f);
 
-	bool     _global_syn_time_start = false;
 	uint64_t _global_syn_time = 0;
-	uint64_t _last_hrt_absolute_time;
-	bool     _global_syn_time_valid = false;
-	uint64_t _last_global_syn_time_start = 0;
 	int     _gps_position_sub;
 	struct vehicle_gps_position_s       _gps_position;
+
+	int     _insert_global_syn_task_debug_sub;
+	struct  rst_insert_global_syn_task_debug_s _insert_syn_task_debug;
 
 	void  calculate_global_syn_time();
 

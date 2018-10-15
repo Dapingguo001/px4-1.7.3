@@ -478,8 +478,8 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 	}
 	/* command */
 	mavlink_command_long_t cmd_mavlink;
+	memset(&cmd_mavlink, 0, sizeof(cmd_mavlink));
 	mavlink_msg_command_long_decode(msg, &cmd_mavlink);
-
 	struct vehicle_command_s vcmd = {
 		.timestamp = hrt_absolute_time(),
 		.param5 = cmd_mavlink.param5,
@@ -499,15 +499,19 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 		.confirmation = cmd_mavlink.confirmation,
 		.from_external = true,
 
-		.task_start_global_syn_time1 = (uint8_t)(cmd_mavlink.move_global_syn_time & 0x00000000000000FF),
-		.task_start_global_syn_time2 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 8 & 0x00000000000000FF),
-		.task_start_global_syn_time3 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 16 & 0x00000000000000FF),
-		.task_start_global_syn_time4 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 24 & 0x00000000000000FF),
-		.task_start_global_syn_time5 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 32 & 0x00000000000000FF),
-		.task_start_global_syn_time6 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 40 & 0x00000000000000FF),
-		.task_start_global_syn_time7 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 48 & 0x00000000000000FF),
-		.task_start_global_syn_time8 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 56 & 0x00000000000000FF),
+		.cmd_start_global_syn_time1 = (uint8_t)(cmd_mavlink.move_global_syn_time & 0x00000000000000FF),
+		.cmd_start_global_syn_time2 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 8 & 0x00000000000000FF),
+		.cmd_start_global_syn_time3 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 16 & 0x00000000000000FF),
+		.cmd_start_global_syn_time4 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 24 & 0x00000000000000FF),
+		.cmd_start_global_syn_time5 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 32 & 0x00000000000000FF),
+		.cmd_start_global_syn_time6 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 40 & 0x00000000000000FF),
+		.cmd_start_global_syn_time7 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 48 & 0x00000000000000FF),
+		.cmd_start_global_syn_time8 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 56 & 0x00000000000000FF),
+
 	};
+	printf("yuwenbin....mavlink...test...2..%lld\n",cmd_mavlink.move_global_syn_time);
+	printf("yuwenbin....mavlink...test...2..%lld\n",cmd_mavlink.move_global_syn_time - _mavlink->get_global_syn_time());
+
 	handle_message_command_both(msg, cmd_mavlink, vcmd);
 }
 
@@ -838,7 +842,17 @@ MavlinkReceiver::handle_message_set_mode(mavlink_message_t *msg)
 		.source_system = msg->sysid,
 		.source_component = msg->compid,
 		.confirmation = 1,
-		.from_external = true
+		.from_external = true,
+
+		.cmd_start_global_syn_time1 = 0,
+		.cmd_start_global_syn_time2 = 0,
+		.cmd_start_global_syn_time3 = 0,
+		.cmd_start_global_syn_time4 = 0,
+		.cmd_start_global_syn_time5 = 0,
+		.cmd_start_global_syn_time6 = 0,
+		.cmd_start_global_syn_time7 = 0,
+		.cmd_start_global_syn_time8 = 0,
+
 	};
 
 	if (_cmd_pub == nullptr) {
@@ -1652,11 +1666,16 @@ void
 MavlinkReceiver::handle_message_rst_global_syn_time(mavlink_message_t *msg)
 {
 	mavlink_rst_global_syn_time_t global_syn_time;
+	memset(&global_syn_time, 0, sizeof(global_syn_time));
+
 	mavlink_msg_rst_global_syn_time_decode(msg, &global_syn_time);
 	if(global_syn_time.request_time != 0)
 	{
-		global_syn_time.global_syn_time = 0;
+		global_syn_time.request_time = 0;
 		global_syn_time.global_syn_time = _mavlink->get_global_syn_time();
+
+		printf("yuwenbin....mavlink...test...3...%lld\n",global_syn_time.global_syn_time);
+
 		mavlink_msg_rst_global_syn_time_send_struct(_mavlink->get_channel(), &global_syn_time);
 	}
 

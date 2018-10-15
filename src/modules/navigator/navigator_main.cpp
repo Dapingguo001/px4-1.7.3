@@ -69,6 +69,9 @@
 #include <uORB/topics/transponder_report.h>
 #include <uORB/topics/vehicle_gps_position.h>
 
+#include <uORB/topics/rst_insert_global_syn_task_debug.h>
+#include <uORB/topics/commander_state.h>
+
 #include <uORB/uORB.h>
 
 /**
@@ -339,6 +342,9 @@ Navigator::task_main()
 
 		if (updated) {
 			vehicle_status_update();
+
+			_nav_status_update = true;
+			
 		}
 
 		/* vehicle land detected updated */
@@ -370,8 +376,32 @@ Navigator::task_main()
 			vehicle_command_s cmd;
 			orb_copy(ORB_ID(vehicle_command), _vehicle_command_sub, &cmd);
 
-			memcpy(&_global_syn_task_cmd, &cmd, sizeof(cmd));
+			memcpy(&_global_syn_cmd, &cmd, sizeof(cmd));
+		}
+		
+		rst_swarm_link_global_syn_task_scheduler(_global_syn_cmd, _vstatus, &_insert_task_debug_msg, 
+												&_carry_out_global_syn_cmd, &_next_global_syn_task);
 
+		if (_insert_global_syn_task_debug_pub != nullptr) {
+			if(_insert_task_debug_msg.whether_record_msg)
+			{
+				orb_publish(ORB_ID(rst_insert_global_syn_task_debug), 
+							_insert_global_syn_task_debug_pub, &_insert_syn_task_debug);
+			}
+
+		} else {
+			_insert_global_syn_task_debug_pub = orb_advertise(ORB_ID(rst_insert_global_syn_task_debug), &_insert_syn_task_debug);
+		}
+
+		if(_carry_out_global_syn_cmd)
+		{
+			::printf("yuwenbin...test...._carry_out_status...%d\n",_next_global_syn_task.status.nav_state);
+			_carry_out_global_syn_cmd = false;
+			vehicle_command_s cmd;
+
+			memcpy(&cmd, &_next_global_syn_task.cmd, sizeof(_next_global_syn_task.cmd));
+			memcpy(&_carry_out_status, &_next_global_syn_task.status, sizeof(_next_global_syn_task.status));
+			
 			if (cmd.command == vehicle_command_s::VEHICLE_CMD_DO_GO_AROUND) {
 
 				// DO_GO_AROUND is currently handled by the position controller (unacknowledged)
@@ -611,7 +641,8 @@ Navigator::task_main()
 		/* Do stuff according to navigation state set by commander */
 		NavigatorMode *navigation_mode_new{nullptr};
 
-		switch (_vstatus.nav_state) {
+//		switch (_vstatus.nav_state) {
+		switch(_carry_out_status.nav_state){
 		case vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION:
 			_pos_sp_triplet_published_invalid_once = false;
 			navigation_mode_new = &_mission;
@@ -689,18 +720,6 @@ Navigator::task_main()
 			break;
 		}
 
-		_global_syn_navigation_mode_new = navigation_mode_new;
-		calculate_global_syn_time();
-		global_syn_task_scheduler();
-
-		if(_carry_out_global_syn_task)
-		{
-			memcpy(&_pos_sp_triplet, &_global_system_syn_task.pos_set_triplet, sizeof(_global_system_syn_task.pos_set_triplet));
-			_pos_sp_triplet_published_invalid_once = false;
-			_carry_out_global_syn_task = false;
-		}
-		navigation_mode_new = _global_system_syn_task.navigation_mode_new;
-
 		/* we have a new navigation mode: reset triplet */
 		if (_navigation_mode != navigation_mode_new) {
 			reset_triplets();
@@ -710,14 +729,17 @@ Navigator::task_main()
 
 		/* iterate through navigation modes and set active/inactive for each */
 		for (unsigned int i = 0; i < NAVIGATOR_MODE_ARRAY_SIZE; i++) {
+
+//			::printf("yuwenbin....test...._navigation_mode..hhh..%d\n",_carry_out_status.nav_state);
 			_navigation_mode_array[i]->run(_navigation_mode == _navigation_mode_array[i]);
 		}
 
 		/* if we landed and have not received takeoff setpoint then stay in idle */
 		if (_land_detected.landed &&
-		    !((_vstatus.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF)
-		      || (_vstatus.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION))) {
-
+//		    !((_vstatus.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF)
+//		      || (_vstatus.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION))) {
+		    !((_carry_out_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF)
+		      || (_carry_out_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION))) {
 			_pos_sp_triplet.current.type = position_setpoint_s::SETPOINT_TYPE_IDLE;
 			_pos_sp_triplet.current.valid = true;
 			_pos_sp_triplet.previous.valid = false;
@@ -763,97 +785,527 @@ Navigator::task_main()
 	_navigator_task = -1;
 }
 
+//function : global 同步命令调度
+//input    : cmd(最新更新的系统命令), vstatus(最新更新的系统状态)
+//output   : 1、carry_out_global_syn_cmd（是否执行新命令标志）， global_syn_cmd_status（新命令内容）
 void
-Navigator::calculate_global_syn_time()
+Navigator::rst_swarm_link_global_syn_task_scheduler(vehicle_command_s cmd, vehicle_status_s vstatus,
+			insert_task_debug_msg_s *insert_task_debug_msg, bool *carry_out_global_syn_cmd, global_syn_task_s *global_syn_task)
 {
-	if(_gps_syn_time_update)
+	uint64_t global_syn_time;
+
+	global_syn_time = calculate_global_syn_time(_gps_syn_time_update, _gps_pos);
+
+//	::printf("yuwenbin.......................global_syn_time..%lld\n",global_syn_time);
+
+	//任务获取/插入
+	if(global_syn_time != 0)
 	{
-		if(_gps_pos.fix_type > 2)
+		task_insert(cmd, vstatus, global_syn_time, &_task_count, insert_task_debug_msg, 
+					&_global_syn_task_linked_list, &_get_immediate_new_task);
+	}
+	else
+	{
+		insert_task_debug_msg->task_type = 0;
+		insert_task_debug_msg->error_type = 3;
+		insert_task_debug_msg->task_count = 0;
+		insert_task_debug_msg->whether_record_msg = true;
+	}
+
+
+	//任务查询
+	if(_task_count != 0)
+	{
+		if(request_one_task || _get_immediate_new_task)//任务执行结束查询 或 改变当前任务时查询
 		{
-			_global_syn_time_start = true;
-			_last_hrt_absolute_time = hrt_absolute_time();
+			task_query(_global_syn_task_linked_list, global_syn_task);
+			request_one_task = false;
+		}
+		
+		//任务执行
+		if(!request_one_task)
+		{
+			task_carry_out(*global_syn_task, global_syn_time, carry_out_global_syn_cmd);
+			if(*carry_out_global_syn_cmd)
+			{
+				request_one_task = true;
+				_task_count = 0;
+			}
+//			::printf("yuwenbin...test...into...carry_out_global_syn_cmd...%d\n",*carry_out_global_syn_cmd);
+//			::printf("yuwenbin...test...into..._task_count...%d\n",_task_count);
+			::printf("yuwenbin...test....into...task_count\n");
 		}
 
-	}
-	
-	if(_global_syn_time_start)
-	{
-		_global_syn_time = (_gps_pos.time_utc_usec + hrt_absolute_time() - _gps_pos.timestamp)/1000;
-		_global_syn_time_valid = true;
-		if((hrt_absolute_time() - _last_hrt_absolute_time) > 60 * 1000 * 1000)
-		{
-			_global_syn_time_valid = false;
-		}
+//		::printf("yuwenbin...test....into...task_count\n");
 	}
 
-	if(_global_syn_time_valid)
-	{
-//		::printf("yuwenbin...test...global_syn_time...%lld\n",_global_syn_time);
-		_last_global_syn_time_start = _global_syn_time;
-	}
-
-//	return 0;
 }
 
-void
-Navigator::global_syn_task_scheduler()
+//function : 计算global同步时间
+//input：     1、gps_syn_time_update（gps数据更新标志） 2、gps_pos（gps信息包）
+//output:	  global同步时间
+uint64_t
+Navigator::calculate_global_syn_time(bool gps_syn_time_update, vehicle_gps_position_s gps_pos)
 {
-	/**********************获取导航数据包中的数据*****************************/
+	static bool     global_syn_time_start = false;
+	static uint64_t   gps_time_utc_usec;
+	static uint64_t   gps_timestamp_time;
+	uint64_t global_syn_time;           //单位：ms
+
+	if(gps_syn_time_update)
+	{
+		if(gps_pos.fix_type > 2)
+		{
+			global_syn_time_start = true;
+			gps_time_utc_usec = gps_pos.time_utc_usec;
+			gps_timestamp_time = gps_pos.timestamp;
+		}
+
+	}
+
+	if(global_syn_time_start)
+	{
+		global_syn_time = (gps_time_utc_usec + hrt_absolute_time() - gps_timestamp_time)/1000;
+		return global_syn_time;
+	}
+	else
+	{
+		return 0;
+	}	
+}
+
+//function: 解析、插入任务，如果后续扩展缓冲区存有多个任务时，可以使用链表，将最先需要执行的任务放在链表前面。
+//input   : 1、cmd(最新更新的命令)， 2、vstatus(最新更新的状态)
+//output  : 1、总任务数，2、系统任务表
+void 
+Navigator::task_insert(vehicle_command_s cmd, vehicle_status_s vstatus, uint64_t global_syn_time, uint8_t *task_count,
+			insert_task_debug_msg_s *insert_task_debug_msg, global_syn_task_s *global_syn_task, bool *get_immediate_new_task)
+{
+	static uint8_t cmd_to_status_cnt = 0;
+	static bool manual_mode_from_cmd = false;
+	static bool first_into_manual_mode = false;
+
+	new_task_type_e new_task_type = no_task;
+	new_task_error_type_e new_task_error_type = no_error;
+
+	*get_immediate_new_task = false;
+
+	insert_task_debug_msg->whether_record_msg = false;
+	
 	if(_global_syn_vehicle_command_update)
 	{
-		_delay_get_navigator_mode = hrt_absolute_time();
-		//获取目标航点信息
-		_global_system_syn_task_cur.task_start_time = ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time8) << 7) | ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time7) << 6) |
-		((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time6) << 5) | ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time5) << 4) |
-		((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time4) << 3) | ((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time3) << 2) |
-		((uint64_t)(_global_syn_task_cmd.task_start_global_syn_time2) << 1) | (uint64_t)(_global_syn_task_cmd.task_start_global_syn_time1);
+		_global_syn_vehicle_command_update = false;
 
-		memcpy(&_global_system_syn_task_cur.pos_set_triplet, &_pos_sp_triplet, sizeof(_pos_sp_triplet));
-		_global_system_syn_task_cur.error_type = 0; 
-		_get_delay_navigator_mode = false;
-		/************************判断任务类型*******************************************/
-		if(_global_system_syn_task_cur.task_start_time != 0)  //延时执行的任务
+		global_syn_task->cmd_start_time = ((uint64_t)(cmd.cmd_start_global_syn_time8) << 56) | ((uint64_t)(cmd.cmd_start_global_syn_time7) << 48) |
+			((uint64_t)(cmd.cmd_start_global_syn_time6) << 40) | ((uint64_t)(cmd.cmd_start_global_syn_time5) << 32) |
+			((uint64_t)(cmd.cmd_start_global_syn_time4) << 24) | ((uint64_t)(cmd.cmd_start_global_syn_time3) << 16) |
+			((uint64_t)(cmd.cmd_start_global_syn_time2) << 8) | (uint64_t)(cmd.cmd_start_global_syn_time1);
+
+		_status_from_cmd = from_cmd_get_status(cmd);
+
+		_get_status = false;
+		cmd_to_status_cnt = 0;
+
+		if(_status_from_cmd == vehicle_status_s::NAVIGATION_STATE_MANUAL)
 		{
-			_delay_syn_task_number = _delay_syn_task_number + 1;
+			manual_mode_from_cmd = true;
+			first_into_manual_mode = true;
 		}
 		else
 		{
-			_instant_syn_task = true;
+			manual_mode_from_cmd = false;
 		}
+
+		::printf("yuwenbin...test..._status_from_cmd...%d\n",_status_from_cmd);
+		::printf("yuwenbin....test..navigation..0\n");
 	}
 
-	//航点命令获取后，延迟200ms,获取系统导航模式命令
-	if(!_get_delay_navigator_mode && (_delay_get_navigator_mode + 200 * 1000 < hrt_absolute_time()))
+	if(!manual_mode_from_cmd)
 	{
-		_global_system_syn_task_cur.navigation_mode_new = _global_syn_navigation_mode_new;
-		_get_delay_navigator_mode = true;
-	}
-
-	/**************************立即执行的任务***********************************/
-	if(_instant_syn_task && _get_delay_navigator_mode)
-	{
-		_carry_out_global_syn_task = true;
-		_instant_syn_task = false;
-	}
-
-	/***************************延时执行的任务**********************************/
-	if(_delay_syn_task_number && _get_delay_navigator_mode)//收到延迟执行的任务
-	{
-		if(!_global_syn_time_valid)//如果global_syn_time无效，取消延迟任务
+		if(!_get_status)
 		{
-			_delay_syn_task_number = 0;
-		}
+			if(_nav_status_update)
+			{
+				_nav_status_update = false;
+				if(_status_from_cmd == vstatus.nav_state)//3个周期内获取对应状态
+				{
+					_get_status = true;
+					::printf("yuwenbin....test..navigation..0...1\n");
+					if(global_syn_task->cmd_start_time != 0) //收到延迟执行的任务
+					{
+						int64_t start_task_time_interval = global_syn_task->cmd_start_time - global_syn_time;
 
-		if(fabs(_global_system_syn_task.task_start_time - _global_syn_time) <=  25)
-		{ 
-			_carry_out_global_syn_task = true;
-			_delay_syn_task_number = _delay_syn_task_number - 1;
+						if(start_task_time_interval > 0 && start_task_time_interval < 60000)//判断任务延迟时间合理范围内
+						{
+
+
+							new_task_type = deferred_task;
+							new_task_error_type = no_error;
+							::printf("yuwenbin....test...navigation...1\n");
+						}
+						else
+						{
+							//*task_count = 0;
+							new_task_type = deferred_task;
+							new_task_error_type = task_startup_time_range_error;
+
+							::printf("yuwenbin....test...navigation...2\n");
+						}
+
+					}
+					else //收到立即执行的任务
+					{
+
+						new_task_type = immediate_task;
+						new_task_error_type = no_error;
+
+						::printf("yuwenbin....test...navigation...3\n");
+					}
+				}
+
+			}
+
+			cmd_to_status_cnt = cmd_to_status_cnt + 1;
+			if(!_get_status && cmd_to_status_cnt >= 3) //3个周期内没有获取到状态, 存在问题，三个周期以外获取到数据
+			{
+				_get_status = true;
+
+				new_task_type = immediate_task;
+				new_task_error_type = no_state_available;
+
+				::printf("yuwenbin....test...navigation...4\n");
+			}
+		}
+		else  //立即执行的任务
+		{
+			if(_nav_status_update)
+			{
+				_nav_status_update = false;
+				if(_last_nav_status != vstatus.nav_state)
+				{
+					new_task_type = immediate_task;
+					new_task_error_type = no_error;
+
+					::printf("yuwenbin....test...navigation...5\n");
+				}
+			}
+		}
+	}
+	else
+	{
+		//进入manual模式，清空所有延时执行的任务。
+		_get_status = true;
+		if(first_into_manual_mode)
+		{
+			first_into_manual_mode = false;
+			new_task_type = immediate_task;
+			new_task_error_type = no_error;
+			vstatus.nav_state = vehicle_status_s::NAVIGATION_STATE_MANUAL;		
 		}
 
 	}
 
-	/****************************任务执行*******************************/
+	if(new_task_type != no_task)
+	{
+		if(new_task_error_type == no_error)
+		{
+			memcpy(&(global_syn_task->cmd), &cmd, sizeof(cmd));
+			memcpy(&(global_syn_task->status), &vstatus, sizeof(vstatus));
+			*task_count = 1;
+			_last_nav_status = global_syn_task->status.nav_state;
 
+			if(new_task_type == immediate_task)
+			{
+				global_syn_task->cmd_start_time = 0;
+			}
+
+			/********************以下8行为测试代码************************/
+/*			if(new_task_type == immediate_task)
+			{
+				global_syn_task->cmd_start_time = 0;
+			}
+			else if(new_task_type == deferred_task)
+			{
+				global_syn_task->cmd_start_time = global_syn_time + 4000;
+			}*/
+			/***********************************************************/
+		}
+		else if(new_task_error_type == task_startup_time_range_error)
+		{
+			_last_nav_status = vstatus.nav_state;
+		}
+
+//		if(new_task_type == immediate_task)
+//		{
+			*get_immediate_new_task = true;
+//		}
+
+		/**********************以下用于添加日志信息**********************/
+		if(new_task_type == immediate_task)
+		{
+			insert_task_debug_msg->start_task_time_interval = 0;
+		}
+		else if(new_task_type == deferred_task)
+		{
+			insert_task_debug_msg->start_task_time_interval = global_syn_task->cmd_start_time - global_syn_time;
+		}
+		insert_task_debug_msg->task_type = new_task_type;
+		insert_task_debug_msg->error_type = new_task_error_type;
+		insert_task_debug_msg->task_count = *task_count;
+		insert_task_debug_msg->whether_record_msg = true;
+
+		::printf("yuwenbin...test....task..number....%d\n",global_syn_task->status.nav_state);
+		::printf("yuwenbin...test....start_task_time_interval....%lld\n",insert_task_debug_msg->start_task_time_interval);
+		::printf("yuwenbin...test....task_type....%d\n",insert_task_debug_msg->task_type);
+		::printf("yuwenbin...test....error_type....%d\n",insert_task_debug_msg->error_type);
+		::printf("yuwenbin...test....task_count....%d\n",insert_task_debug_msg->task_count);
+		::printf("................................................................\n");
+	}
+}
+
+//function: 获取下一个要执行的任务类型
+//output:   0:立即执行的任务  1：延迟执行的任务
+void
+Navigator::task_query(global_syn_task_s global_syn_task_linked_list, global_syn_task_s *global_syn_task)
+{
+	//获取下一个要执行的任务
+	memcpy(global_syn_task, &global_syn_task_linked_list, sizeof(global_syn_task_linked_list));
+}
+
+//function: 判断任务是否执行
+//input   : 1、task_type(任务类型)， 2、global_syn_task(待执行的任务)、 3、global同步时间
+//output  : 1、task_count（任务数量），2、是否执行当前任务
+void
+Navigator::task_carry_out(global_syn_task_s global_syn_task, 
+							uint64_t global_syn_time, bool *carry_out)
+{
+	*carry_out = false;
+
+	if(global_syn_task.cmd_start_time == 0)
+	{
+		*carry_out = true;
+	}
+	else
+	{
+		if(global_syn_task.cmd_start_time < global_syn_time)
+		{
+			*carry_out = true;
+			::printf("yuwenbin.....test.....carry...out\n");
+		}
+	}
+	::printf("yuwenbin..............cmd_start_time..%lld\n",global_syn_task.cmd_start_time);
+
+	::printf("yuwenbin..............global_syn_time..%lld\n",global_syn_time);
+
+	::printf("yuwenbin..............cmd_start_time.-..global_syn_time..%lld\n",global_syn_task.cmd_start_time - global_syn_time);
+
+	::printf("yuwenbin.....test.....carry...out...%d\n",*carry_out);
+}
+
+uint8_t
+Navigator::from_cmd_get_status(vehicle_command_s cmd)
+{
+	switch (cmd.command)
+	{
+		case vehicle_command_s::VEHICLE_CMD_DO_REPOSITION:
+		{
+			if ((((uint32_t)cmd.param2) & 1) > 0)
+			{
+				return vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER;
+			}
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_MODE:
+		{
+			uint8_t base_mode = (uint8_t)cmd.param1;
+			uint8_t custom_main_mode = (uint8_t)cmd.param2;
+			uint8_t custom_sub_mode = (uint8_t)cmd.param3;
+
+			if (base_mode & VEHICLE_MODE_FLAG_CUSTOM_MODE_ENABLED)
+			{
+				if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_MANUAL)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+				}
+				else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_ALTCTL)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_ALTCTL;
+				}
+				else if(custom_main_mode == PX4_CUSTOM_MAIN_MODE_POSCTL)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_ALTCTL;
+				}
+				else if(custom_main_mode == PX4_CUSTOM_MAIN_MODE_AUTO)
+				{
+					if (custom_sub_mode > 0)
+					{
+						switch(custom_sub_mode)
+						{
+							case PX4_CUSTOM_SUB_MODE_AUTO_LOITER:
+								return vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER; 
+							break;
+
+							case PX4_CUSTOM_SUB_MODE_AUTO_MISSION:
+								return vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION;
+							break;
+
+							case PX4_CUSTOM_SUB_MODE_AUTO_RTL:
+								return vehicle_status_s::NAVIGATION_STATE_AUTO_RTL;
+							break;
+
+							case PX4_CUSTOM_SUB_MODE_AUTO_TAKEOFF:
+								return vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF;
+							break;
+
+							case PX4_CUSTOM_SUB_MODE_AUTO_LAND:
+								return vehicle_status_s::NAVIGATION_STATE_AUTO_LAND;
+							break;
+
+							case PX4_CUSTOM_SUB_MODE_AUTO_FOLLOW_TARGET:
+								return vehicle_status_s::NAVIGATION_STATE_AUTO_FOLLOW_TARGET;
+							break;
+
+							default:
+							break; 
+						}
+					}
+					else
+					{
+						return vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION;
+					}
+				}
+				else if(custom_main_mode == PX4_CUSTOM_MAIN_MODE_ACRO)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_ACRO;
+				}
+				else if(custom_main_mode == PX4_CUSTOM_MAIN_MODE_RATTITUDE)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+				}
+				else if(custom_main_mode == PX4_CUSTOM_MAIN_MODE_STABILIZED)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+				}
+				else if(custom_main_mode == PX4_CUSTOM_MAIN_MODE_OFFBOARD)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_OFFBOARD;
+				}
+			}
+			else
+			{
+				if (base_mode & VEHICLE_MODE_FLAG_AUTO_ENABLED)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION;
+				}
+				else if (base_mode & VEHICLE_MODE_FLAG_MANUAL_INPUT_ENABLED)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_POSCTL;
+				}
+				else if (base_mode & VEHICLE_MODE_FLAG_STABILIZE_ENABLED)
+				{
+					return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+				}
+				else
+				{
+					return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+				}
+			}
+		}	
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_COMPONENT_ARM_DISARM:
+		{
+			return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_DO_FLIGHTTERMINATION:
+		{
+			return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_HOME:
+		{
+			return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_NAV_GUIDED_ENABLE:
+		{
+			if (cmd.param1 > 0.5f) 
+			{
+				return vehicle_status_s::NAVIGATION_STATE_OFFBOARD;
+			}
+			else
+			{
+				//return commander_state_s::main_state_pre_offboard
+			}
+
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_NAV_RETURN_TO_LAUNCH: 
+		{
+			return vehicle_status_s::NAVIGATION_STATE_AUTO_RTL;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_NAV_TAKEOFF: 
+		{
+			return vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_NAV_LAND: 
+		{
+			return vehicle_status_s::NAVIGATION_STATE_AUTO_LAND;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_MISSION_START: 
+		{
+			return vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION;
+		}
+		break;
+
+		case vehicle_command_s::VEHICLE_CMD_CUSTOM_0:
+		case vehicle_command_s::VEHICLE_CMD_CUSTOM_1:
+		case vehicle_command_s::VEHICLE_CMD_CUSTOM_2:
+		case vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONTROL:
+		case vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONFIGURE:
+		case vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONTROL_QUAT:
+		case vehicle_command_s::VEHICLE_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
+		case vehicle_command_s::VEHICLE_CMD_PREFLIGHT_CALIBRATION:
+		case vehicle_command_s::VEHICLE_CMD_PREFLIGHT_SET_SENSOR_OFFSETS:
+		case vehicle_command_s::VEHICLE_CMD_PREFLIGHT_STORAGE:
+		case vehicle_command_s::VEHICLE_CMD_PREFLIGHT_UAVCAN:
+		case vehicle_command_s::VEHICLE_CMD_PAYLOAD_PREPARE_DEPLOY:
+		case vehicle_command_s::VEHICLE_CMD_PAYLOAD_CONTROL_DEPLOY:
+		case vehicle_command_s::VEHICLE_CMD_DO_VTOL_TRANSITION:
+		case vehicle_command_s::VEHICLE_CMD_DO_TRIGGER_CONTROL:
+		case vehicle_command_s::VEHICLE_CMD_DO_DIGICAM_CONTROL:
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_CAM_TRIGG_DIST:
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_CAM_TRIGG_INTERVAL:
+		case vehicle_command_s::VEHICLE_CMD_SET_CAMERA_MODE:
+		case vehicle_command_s::VEHICLE_CMD_DO_CHANGE_SPEED:
+		case vehicle_command_s::VEHICLE_CMD_DO_LAND_START:
+		case vehicle_command_s::VEHICLE_CMD_DO_GO_AROUND:
+		case vehicle_command_s::VEHICLE_CMD_START_RX_PAIR:
+		case vehicle_command_s::VEHICLE_CMD_LOGGING_START:
+		case vehicle_command_s::VEHICLE_CMD_LOGGING_STOP:
+		case vehicle_command_s::VEHICLE_CMD_NAV_DELAY:
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI:
+		case vehicle_command_s::VEHICLE_CMD_NAV_ROI:
+			return vehicle_status_s::NAVIGATION_STATE_MANUAL;
+			break;
+
+		default:
+			break;
+	}
+
+	return vehicle_status_s::NAVIGATION_STATE_MANUAL;
 }
 
 int
@@ -865,7 +1317,8 @@ Navigator::start()
 	_navigator_task = px4_task_spawn_cmd("navigator",
 					     SCHED_DEFAULT,
 					     SCHED_PRIORITY_NAVIGATION,
-					     1800,
+//					     1800,
+						 2500,
 					     (px4_main_t)&Navigator::task_main_trampoline,
 					     nullptr);
 
@@ -928,7 +1381,8 @@ float
 Navigator::get_cruising_speed()
 {
 	/* there are three options: The mission-requested cruise speed, or the current hover / plane speed */
-	if (_vstatus.is_rotary_wing) {
+//	if (_vstatus.is_rotary_wing) {
+	if (_carry_out_status.is_rotary_wing){
 		if (is_planned_mission() && _mission_cruising_speed_mc > 0.0f) {
 			return _mission_cruising_speed_mc;
 
@@ -949,7 +1403,8 @@ Navigator::get_cruising_speed()
 void
 Navigator::set_cruising_speed(float speed)
 {
-	if (_vstatus.is_rotary_wing) {
+//	if (_vstatus.is_rotary_wing) {
+	if (_carry_out_status.is_rotary_wing) {
 		_mission_cruising_speed_mc = speed;
 
 	} else {
@@ -994,7 +1449,8 @@ Navigator::get_acceptance_radius(float mission_item_radius)
 	// when in fixed wing mode
 	// this might need locking against a commanded transition
 	// so that a stale _vstatus doesn't trigger an accepted mission item.
-	if (!_vstatus.is_rotary_wing && !_vstatus.in_transition_mode) {
+//	if (!_vstatus.is_rotary_wing && !_vstatus.in_transition_mode) {
+	if (!_carry_out_status.is_rotary_wing && !_carry_out_status.in_transition_mode) {
 		if ((hrt_elapsed_time(&_fw_pos_ctrl_status.timestamp) < 5000000) && (_fw_pos_ctrl_status.turn_distance > radius)) {
 			radius = _fw_pos_ctrl_status.turn_distance;
 		}
@@ -1143,7 +1599,8 @@ Navigator::abort_landing()
 {
 	bool should_abort = false;
 
-	if (!_vstatus.is_rotary_wing && !_vstatus.in_transition_mode) {
+//	if (!_vstatus.is_rotary_wing && !_vstatus.in_transition_mode) {
+	if (!_carry_out_status.is_rotary_wing && !_carry_out_status.in_transition_mode) {
 		if (hrt_elapsed_time(&_fw_pos_ctrl_status.timestamp) < 1000000) {
 
 			if (get_position_setpoint_triplet()->current.valid
@@ -1274,9 +1731,12 @@ void
 Navigator::publish_vehicle_cmd(vehicle_command_s *vcmd)
 {
 	vcmd->timestamp = hrt_absolute_time();
-	vcmd->source_system = _vstatus.system_id;
-	vcmd->source_component = _vstatus.component_id;
-	vcmd->target_system = _vstatus.system_id;
+//	vcmd->source_system = _vstatus.system_id;
+//	vcmd->source_component = _vstatus.component_id;
+//	vcmd->target_system = _vstatus.system_id;
+	vcmd->source_system = _carry_out_status.system_id;
+	vcmd->source_component = _carry_out_status.component_id;
+	vcmd->target_system = _carry_out_status.system_id;
 	vcmd->confirmation = false;
 	vcmd->from_external = false;
 
@@ -1291,7 +1751,8 @@ Navigator::publish_vehicle_cmd(vehicle_command_s *vcmd)
 		break;
 
 	default:
-		vcmd->target_component = _vstatus.component_id;
+//		vcmd->target_component = _vstatus.component_id;
+		vcmd->target_component = _carry_out_status.component_id;
 		break;
 	}
 

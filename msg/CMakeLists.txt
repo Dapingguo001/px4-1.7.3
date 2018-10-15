@@ -130,8 +130,9 @@ set(msg_files
 	rst_swarm_link_fc_statue_receive.msg
 	rst_swarm_link_fc_statue_send.msg
 	rst_swarm_link_light_control_component.msg
-
 	rst_swarm_link_broadcast_light_control_receive.msg
+
+	rst_insert_global_syn_task_debug.msg
 
 	)
 

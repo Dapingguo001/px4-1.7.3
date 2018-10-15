@@ -83,6 +83,7 @@
 #include <uORB/topics/rst_swarm_link_light_control_component.h>
 #include <uORB/topics/rst_swarm_link_fc_statue_send.h>
 #include <uORB/topics/vehicle_gps_position.h>
+#include <uORB/topics/rst_insert_global_syn_task_debug.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_main.h"
@@ -1790,6 +1791,11 @@ void
 Mavlink::calculate_global_syn_time()
 {
 	static bool gps_updated = false;
+
+	static bool     global_syn_time_start = false;
+	static uint64_t   gps_time_utc_usec;
+	static uint64_t   gps_timestamp_time;
+
 	orb_check(_gps_position_sub, &gps_updated);
 
 	if(gps_updated)
@@ -1798,29 +1804,24 @@ Mavlink::calculate_global_syn_time()
 
 		if(_gps_position.fix_type > 2)
 		{
-			_global_syn_time_start = true;
-			_last_hrt_absolute_time = hrt_absolute_time();
+			global_syn_time_start = true;
+			gps_time_utc_usec = _gps_position.time_utc_usec;
+			gps_timestamp_time = _gps_position.timestamp;
 		}
 
 	}
 	
-	if(_global_syn_time_start)
+	if(global_syn_time_start)
 	{
-		_global_syn_time = (_gps_position.time_utc_usec + hrt_absolute_time() - _gps_position.timestamp)/1000;
-		_global_syn_time_valid = true;
-		if((hrt_absolute_time() - _last_hrt_absolute_time) > 60 * 1000 * 1000)
-		{
-			_global_syn_time_valid = false;
-		}
-//		::printf("yuwenbin......_global_syn_time_start\n");
-	}
+		_global_syn_time = (gps_time_utc_usec + hrt_absolute_time() - gps_timestamp_time)/1000;
 
-	if(_global_syn_time_valid)
+	}
+	else
 	{
-//		::printf("yuwenbin...test...global_syn_time...%lld\n",_global_syn_time);
-		_last_global_syn_time_start = _global_syn_time;
+		_global_syn_time = 0;
 	}
 }
+
 
 int
 Mavlink::task_main(int argc, char *argv[])
@@ -2261,6 +2262,7 @@ Mavlink::task_main(int argc, char *argv[])
 	MavlinkReceiver::receive_start(&_receive_thread, this);
 
 	_gps_position_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
+	_insert_global_syn_task_debug_sub = orb_subscribe(ORB_ID(rst_insert_global_syn_task_debug));
 
 	while (!_task_should_exit) {
 		/* main loop */
@@ -2477,6 +2479,27 @@ Mavlink::task_main(int argc, char *argv[])
 //			::printf("yuwenbin....test...send\n");
 			mavlink_msg_rst_fc_statue_send_struct(get_channel(),&mavlink_rst_fc_statue_send);
 		}
+
+		orb_check(swarm_link_fc_statue_send_sub, &updated);
+		if(updated)
+		{
+			orb_copy(ORB_ID(rst_insert_global_syn_task_debug), 
+								_insert_global_syn_task_debug_sub, &_insert_syn_task_debug);
+
+			mavlink_insert_global_syn_task_msg_t insert_syn_task_msg;
+
+			insert_syn_task_msg.start_task_time_interval = _insert_syn_task_debug.start_task_time_interval;
+			insert_syn_task_msg.error_type = _insert_syn_task_debug.error_type;
+			insert_syn_task_msg.task_count = _insert_syn_task_debug.task_count;
+
+			mavlink_msg_insert_global_syn_task_msg_send_struct(get_channel(), &insert_syn_task_msg);
+		}
+
+/*		mavlink_rst_global_syn_time_t global_syn_time;
+		memset(&global_syn_time, 0, sizeof(global_syn_time));
+		global_syn_time.request_time = 1;
+		global_syn_time.global_syn_time = 0;
+		mavlink_msg_rst_global_syn_time_send_struct(get_channel(), &global_syn_time);*/
 
 
 		perf_end(_loop_perf);

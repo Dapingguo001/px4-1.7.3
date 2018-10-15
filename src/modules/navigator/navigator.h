@@ -71,6 +71,7 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/uORB.h>
+#include <uORB/topics/rst_insert_global_syn_task_debug.h>
 
 /**
  * Number of navigation modes that need on_active/on_inactive calls
@@ -336,35 +337,98 @@ private:
 	float _mission_cruising_speed_fw{-1.0f};
 	float _mission_throttle{-1.0f};
 
+	struct global_syn_task_s{
+		uint64_t cmd_start_time;
+		vehicle_command_s cmd;
+		vehicle_status_s status{};
+	};
+
+	struct insert_task_debug_msg_s{
+		uint8_t task_type;
+		int32_t start_task_time_interval;
+		uint8_t error_type;
+		uint8_t task_count;
+		bool whether_record_msg;
+	};
+
+	enum new_task_type_e{
+		no_task = 0,
+		immediate_task,
+		deferred_task,
+	};
+
+	enum new_task_error_type_e{
+		no_error = 0,
+		task_startup_time_range_error,
+		no_state_available,
+		global_syn_time_no_start,
+	};
+
+	typedef enum VEHICLE_MODE_FLAG
+	{
+		VEHICLE_MODE_FLAG_CUSTOM_MODE_ENABLED=1, /* 0b00000001 Reserved for future use. | */
+		VEHICLE_MODE_FLAG_TEST_ENABLED=2, /* 0b00000010 system has a test mode enabled. This flag is intended for temporary system tests and should not be used for stable implementations. | */
+		VEHICLE_MODE_FLAG_AUTO_ENABLED=4, /* 0b00000100 autonomous mode enabled, system finds its own goal positions. Guided flag can be set or not, depends on the actual implementation. | */
+		VEHICLE_MODE_FLAG_GUIDED_ENABLED=8, /* 0b00001000 guided mode enabled, system flies MISSIONs / mission items. | */
+		VEHICLE_MODE_FLAG_STABILIZE_ENABLED=16, /* 0b00010000 system stabilizes electronically its attitude (and optionally position). It needs however further control inputs to move around. | */
+		VEHICLE_MODE_FLAG_HIL_ENABLED=32, /* 0b00100000 hardware in the loop simulation. All motors / actuators are blocked, but internal software is full operational. | */
+		VEHICLE_MODE_FLAG_MANUAL_INPUT_ENABLED=64, /* 0b01000000 remote control input is enabled. | */
+		VEHICLE_MODE_FLAG_SAFETY_ARMED=128, /* 0b10000000 MAV safety set to armed. Motors are enabled / running / can start. Ready to fly. | */
+		VEHICLE_MODE_FLAG_ENUM_END=129, /*  | */
+	} VEHICLE_MODE_FLAG;
+
+	enum PX4_CUSTOM_MAIN_MODE {
+		PX4_CUSTOM_MAIN_MODE_MANUAL = 1,
+		PX4_CUSTOM_MAIN_MODE_ALTCTL,
+		PX4_CUSTOM_MAIN_MODE_POSCTL,
+		PX4_CUSTOM_MAIN_MODE_AUTO,
+		PX4_CUSTOM_MAIN_MODE_ACRO,
+		PX4_CUSTOM_MAIN_MODE_OFFBOARD,
+		PX4_CUSTOM_MAIN_MODE_STABILIZED,
+		PX4_CUSTOM_MAIN_MODE_RATTITUDE,
+		PX4_CUSTOM_MAIN_MODE_SIMPLE /* unused, but reserved for future use */
+	};
+
+	enum PX4_CUSTOM_SUB_MODE_AUTO {
+		PX4_CUSTOM_SUB_MODE_AUTO_READY = 1,
+		PX4_CUSTOM_SUB_MODE_AUTO_TAKEOFF,
+		PX4_CUSTOM_SUB_MODE_AUTO_LOITER,
+		PX4_CUSTOM_SUB_MODE_AUTO_MISSION,
+		PX4_CUSTOM_SUB_MODE_AUTO_RTL,
+		PX4_CUSTOM_SUB_MODE_AUTO_LAND,
+		PX4_CUSTOM_SUB_MODE_AUTO_RTGS,
+		PX4_CUSTOM_SUB_MODE_AUTO_FOLLOW_TARGET
+	};
+
+	uint8_t _last_nav_status = 0;
+    
 	bool _gps_syn_time_update = false;
+	bool _nav_status_update = false;
+	bool _nav_status_update_valid = true;
 	bool _global_syn_vehicle_command_update = false;
 
-	bool     _global_syn_time_start = false;
-	uint64_t _global_syn_time;           //单位：ms
-	uint64_t _last_hrt_absolute_time;
-	bool     _global_syn_time_valid = false;
-	uint64_t _last_global_syn_time_start = 0;
-	
+	bool _get_immediate_new_task = false;
 
-	struct global_system_syn_task{
-		uint64_t task_start_time;
-		NavigatorMode *navigation_mode_new{nullptr};
-		position_setpoint_triplet_s pos_set_triplet;   //位置设定点
-		uint8_t  error_type;                           //错误类型 0：无错误 ......
-	}_global_system_syn_task;
+	uint8_t _status_from_cmd;
+	global_syn_task_s _global_syn_task_linked_list;
+	global_syn_task_s _next_global_syn_task{};
 
-	global_system_syn_task _global_system_syn_task_cur{};
-	global_system_syn_task _global_system_syn_task_pre{};
+	bool request_one_task = true;
+	vehicle_status_s	_carry_out_status{};
 
-	uint8_t  _delay_syn_task_number = 0;
-	bool     _instant_syn_task = false;
+	bool _get_status = false;
+	uint8_t _task_count = 0;
 
-	bool     _carry_out_global_syn_task = false;
-	uint64_t _delay_get_navigator_mode;
-	bool     _get_delay_navigator_mode;
+	insert_task_debug_msg_s _insert_task_debug_msg;
 
-	vehicle_command_s _global_syn_task_cmd;
-	NavigatorMode *_global_syn_navigation_mode_new{nullptr};
+	global_syn_task_s _global_syn_task{};
+
+	bool     _carry_out_global_syn_cmd = false;
+
+	vehicle_command_s _global_syn_cmd;
+
+	orb_advert_t	_insert_global_syn_task_debug_pub{nullptr};
+	rst_insert_global_syn_task_debug_s _insert_syn_task_debug;
 
 	// update subscriptions
 	void		fw_pos_ctrl_status_update(bool force = false);
@@ -399,7 +463,19 @@ private:
 
 	void		publish_vehicle_command_ack(const vehicle_command_s &cmd, uint8_t result);
 
-	void  calculate_global_syn_time();
-	void  global_syn_task_scheduler();
+	void rst_swarm_link_global_syn_task_scheduler(vehicle_command_s cmd, vehicle_status_s vstatus,
+					insert_task_debug_msg_s *insert_task_debug_msg, bool *carry_out_global_syn_cmd, global_syn_task_s *global_syn_task);
+
+	uint64_t calculate_global_syn_time(bool gps_syn_time_update, vehicle_gps_position_s gps_pos);
+
+	void task_insert(vehicle_command_s cmd, vehicle_status_s vstatus, uint64_t global_syn_time, uint8_t *task_count,
+			insert_task_debug_msg_s *insert_task_debug_msg, global_syn_task_s *global_syn_task, bool *get_immediate_new_task);
+
+	uint8_t from_cmd_get_status(vehicle_command_s cmd);
+
+	void task_query(global_syn_task_s _global_syn_task_linked_list, global_syn_task_s *global_syn_task);
+
+	void task_carry_out(global_syn_task_s global_syn_task, 
+							uint64_t global_syn_time, bool *carry_out);
 };
 #endif
