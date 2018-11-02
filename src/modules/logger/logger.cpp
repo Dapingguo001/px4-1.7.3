@@ -618,6 +618,8 @@ void Logger::add_default_topics()
 	add_topic("vehicle_vision_position");
 	add_topic("vtol_vehicle_status", 200);
 	add_topic("wind_estimate", 200);
+	add_topic("rst_insert_global_syn_task_debug");
+	add_topic("rst_takeoff_supervise");
 }
 
 void Logger::add_high_rate_topics()

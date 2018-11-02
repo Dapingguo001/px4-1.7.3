@@ -43,6 +43,7 @@
 
 #include <controllib/blocks.hpp>
 #include <controllib/block/BlockParam.hpp>
+#include <uORB/topics/rst_takeoff_supervise.h>
 
 #include "navigator_mode.h"
 #include "mission_block.h"
@@ -59,6 +60,9 @@ public:
 	virtual void on_activation();
 
 	virtual void on_active();
+
+	orb_advert_t _takeoff_supervise_pub;
+	struct rst_takeoff_supervise_s _takeoff_supervise;
 
 private:
 	control::BlockParamFloat _param_min_alt;

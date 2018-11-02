@@ -133,6 +133,7 @@ set(msg_files
 	rst_swarm_link_broadcast_light_control_receive.msg
 
 	rst_insert_global_syn_task_debug.msg
+	rst_takeoff_supervise.msg
 
 	)
 

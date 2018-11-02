@@ -49,6 +49,7 @@
 
 #include <uORB/uORB.h>
 #include <uORB/topics/position_setpoint_triplet.h>
+#include <uORB/topics/rst_takeoff_supervise.h>
 
 #include "takeoff.h"
 #include "navigator.h"
@@ -57,6 +58,11 @@ Takeoff::Takeoff(Navigator *navigator, const char *name) :
 	MissionBlock(navigator, name),
 	_param_min_alt(this, "MIS_TAKEOFF_ALT", false)
 {
+	memset(&_takeoff_supervise, 0, sizeof(_takeoff_supervise));
+
+	_takeoff_supervise_pub = 
+					orb_advertise(ORB_ID(rst_takeoff_supervise), &_takeoff_supervise);
+
 }
 
 Takeoff::~Takeoff()
@@ -105,6 +111,8 @@ Takeoff::set_takeoff_position()
 
 	float min_abs_altitude;
 
+	uint8_t takeoff_supervise = 0;
+
 	if (_navigator->home_position_valid()) { //only use home position if it is valid
 		min_abs_altitude = _navigator->get_global_position()->alt + _param_min_alt.get();
 
@@ -115,12 +123,13 @@ Takeoff::set_takeoff_position()
 	// Use altitude if it has been set. If home position is invalid use min_abs_altitude
 	if (rep->current.valid && PX4_ISFINITE(rep->current.alt) && _navigator->home_position_valid()) {
 		abs_altitude = rep->current.alt;
-
+		takeoff_supervise = 1;
 		// If the altitude suggestion is lower than home + minimum clearance, raise it and complain.
 		if (abs_altitude < min_abs_altitude) {
 			abs_altitude = min_abs_altitude;
 			mavlink_log_critical(_navigator->get_mavlink_log_pub(),
 					     "Using minimum takeoff altitude: %.2f m", (double)_param_min_alt.get());
+		    takeoff_supervise = 2;
 		}
 
 	} else {
@@ -128,6 +137,7 @@ Takeoff::set_takeoff_position()
 		abs_altitude = min_abs_altitude;
 		mavlink_log_info(_navigator->get_mavlink_log_pub(),
 				 "Using minimum takeoff altitude: %.2f m", (double)_param_min_alt.get());
+		takeoff_supervise = 3;
 	}
 
 
@@ -136,8 +146,9 @@ Takeoff::set_takeoff_position()
 		abs_altitude = _navigator->get_global_position()->alt;
 		mavlink_log_critical(_navigator->get_mavlink_log_pub(),
 				     "Already higher than takeoff altitude");
+		takeoff_supervise = 4;
 	}
-
+	takeoff_supervise = 5;
 	// set current mission item to takeoff
 	set_takeoff_item(&_mission_item, abs_altitude);
 	_navigator->get_mission_result()->finished = false;
@@ -171,4 +182,10 @@ Takeoff::set_takeoff_position()
 	_navigator->set_can_loiter_at_sp(true);
 
 	_navigator->set_position_setpoint_triplet_updated();
+
+	_takeoff_supervise.send_message_number = 1;
+	_takeoff_supervise.navigation_global_alt = _navigator->get_global_position()->alt;
+	_takeoff_supervise.param_min_alt = _param_min_alt.get();
+	_takeoff_supervise.navigation_supervise_number = takeoff_supervise;
+	orb_publish(ORB_ID(rst_takeoff_supervise), _takeoff_supervise_pub, &_takeoff_supervise);
 }

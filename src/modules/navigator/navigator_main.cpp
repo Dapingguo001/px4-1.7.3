@@ -385,6 +385,11 @@ Navigator::task_main()
 		if (_insert_global_syn_task_debug_pub != nullptr) {
 			if(_insert_task_debug_msg.whether_record_msg)
 			{
+				_insert_syn_task_debug.timestamp = hrt_absolute_time();
+				_insert_syn_task_debug.start_task_time_interval = _insert_task_debug_msg.start_task_time_interval;
+				_insert_syn_task_debug.task_type = _insert_task_debug_msg.task_type;
+				_insert_syn_task_debug.error_type = _insert_task_debug_msg.error_type;
+				_insert_syn_task_debug.task_count = _insert_task_debug_msg.task_count;
 				orb_publish(ORB_ID(rst_insert_global_syn_task_debug), 
 							_insert_global_syn_task_debug_pub, &_insert_syn_task_debug);
 			}
@@ -1054,12 +1059,12 @@ Navigator::task_insert(vehicle_command_s cmd, vehicle_status_s vstatus, uint64_t
 		insert_task_debug_msg->task_count = *task_count;
 		insert_task_debug_msg->whether_record_msg = true;
 
-		::printf("yuwenbin...test....task..number....%d\n",global_syn_task->status.nav_state);
-		::printf("yuwenbin...test....start_task_time_interval....%lld\n",insert_task_debug_msg->start_task_time_interval);
-		::printf("yuwenbin...test....task_type....%d\n",insert_task_debug_msg->task_type);
-		::printf("yuwenbin...test....error_type....%d\n",insert_task_debug_msg->error_type);
-		::printf("yuwenbin...test....task_count....%d\n",insert_task_debug_msg->task_count);
-		::printf("................................................................\n");
+//		::printf("yuwenbin...test....task..number....%d\n",global_syn_task->status.nav_state);
+//		::printf("yuwenbin...test....start_task_time_interval....%lld\n",insert_task_debug_msg->start_task_time_interval);
+//		::printf("yuwenbin...test....task_type....%d\n",insert_task_debug_msg->task_type);
+//		::printf("yuwenbin...test....error_type....%d\n",insert_task_debug_msg->error_type);
+//		::printf("yuwenbin...test....task_count....%d\n",insert_task_debug_msg->task_count);
+//		::printf("................................................................\n");
 	}
 }
 

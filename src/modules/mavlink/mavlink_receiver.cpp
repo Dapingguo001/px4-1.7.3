@@ -168,11 +168,16 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	memset(&_light_control_receive, 0, sizeof(_light_control_receive));
 	memset(&_fc_statue_receive, 0, sizeof(_fc_statue_receive));
 	memset(&_broadcast_light_control_receive, 0, sizeof(_broadcast_light_control_receive));
+
+	memset(&_takeoff_supervise, 0, sizeof(_takeoff_supervise));
 	
 	_swarm_link_light_control_receive_pub = orb_advertise(ORB_ID(rst_swarm_link_light_control_receive), &_light_control_receive);
 	_swarm_link_fc_statue_receive_pub = orb_advertise(ORB_ID(rst_swarm_link_fc_statue_receive), &_fc_statue_receive);
 	_swarm_link_broadcast_light_control_receive_pub = 
 						orb_advertise(ORB_ID(rst_swarm_link_broadcast_light_control_receive), &_broadcast_light_control_receive);
+
+	_takeoff_supervise_pub = 
+					orb_advertise(ORB_ID(rst_takeoff_supervise), &_takeoff_supervise);
 
 
 }
@@ -509,10 +514,13 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 		.cmd_start_global_syn_time8 = (uint8_t)(cmd_mavlink.move_global_syn_time >> 56 & 0x00000000000000FF),
 
 	};
-	printf("yuwenbin....mavlink...test...2..%lld\n",cmd_mavlink.move_global_syn_time);
-	printf("yuwenbin....mavlink...test...2..%lld\n",cmd_mavlink.move_global_syn_time - _mavlink->get_global_syn_time());
 
 	handle_message_command_both(msg, cmd_mavlink, vcmd);
+
+	_takeoff_supervise.send_message_number = 0;
+	_takeoff_supervise.mavlink_home_alt = _home.alt;
+	_takeoff_supervise.mavlink_cmd_7 = cmd_mavlink.param7 + _home.alt;
+	orb_publish(ORB_ID(rst_takeoff_supervise), _takeoff_supervise_pub, &_takeoff_supervise);
 }
 
 void

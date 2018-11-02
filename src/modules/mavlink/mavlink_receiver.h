@@ -82,6 +82,7 @@
 #include <uORB/topics/rst_swarm_link_fc_statue_receive.h>
 #include <uORB/topics/rst_swarm_link_broadcast_light_control_receive.h>
 #include <uORB/topics/home_position.h>
+#include <uORB/topics/rst_takeoff_supervise.h>
 
 
 #include "mavlink_mission.h"
@@ -263,6 +264,7 @@ private:
 	orb_advert_t _swarm_link_light_control_receive_pub;
 	orb_advert_t _swarm_link_fc_statue_receive_pub;
 	orb_advert_t _swarm_link_broadcast_light_control_receive_pub;
+	orb_advert_t _takeoff_supervise_pub;
 
 
 	int _control_mode_sub;
@@ -282,6 +284,7 @@ private:
 
 	struct rst_swarm_link_fc_statue_receive_s _fc_statue_receive;
 	struct rst_swarm_link_light_control_receive_s _light_control_receive;
+	struct rst_takeoff_supervise_s _takeoff_supervise;
 
 	struct rst_swarm_link_broadcast_light_control_receive_s _broadcast_light_control_receive;
 
