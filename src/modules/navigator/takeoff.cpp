@@ -183,6 +183,7 @@ Takeoff::set_takeoff_position()
 
 	_navigator->set_position_setpoint_triplet_updated();
 
+	_takeoff_supervise.timestamp = hrt_absolute_time();
 	_takeoff_supervise.send_message_number = 1;
 	_takeoff_supervise.navigation_global_alt = _navigator->get_global_position()->alt;
 	_takeoff_supervise.param_min_alt = _param_min_alt.get();

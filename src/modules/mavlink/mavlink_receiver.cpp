@@ -517,6 +517,7 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 
 	handle_message_command_both(msg, cmd_mavlink, vcmd);
 
+	_takeoff_supervise.timestamp = hrt_absolute_time();
 	_takeoff_supervise.send_message_number = 0;
 	_takeoff_supervise.mavlink_home_alt = _home.alt;
 	_takeoff_supervise.mavlink_cmd_7 = cmd_mavlink.param7 + _home.alt;

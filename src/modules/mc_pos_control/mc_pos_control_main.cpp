@@ -234,6 +234,7 @@ private:
 		param_t opt_recover;
 		param_t rc_flt_smp_rate;
 		param_t rc_flt_cutoff;
+		param_t rst_land_mspeed;
 	}		_params_handles;		/**< handles for interesting parameters */
 
 	struct {
@@ -262,6 +263,7 @@ private:
 
 		float rc_flt_smp_rate;
 		float rc_flt_cutoff;
+		float rst_land_mspeed;
 
 		math::Vector<3> pos_p;
 		math::Vector<3> vel_p;
@@ -549,6 +551,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_params_handles.alt_mode = param_find("MPC_ALT_MODE");
 	_params_handles.rc_flt_cutoff = param_find("RC_FLT_CUTOFF");
 	_params_handles.rc_flt_smp_rate = param_find("RC_FLT_SMP_RATE");
+	_params_handles.rst_land_mspeed = param_find("RST_LAND_MSPEED");
 
 	/* fetch initial parameter values */
 	parameters_update(true);
@@ -672,6 +675,9 @@ MulticopterPositionControl::parameters_update(bool force)
 
 		param_get(_params_handles.alt_mode, &v_i);
 		_params.alt_mode = v_i;
+
+		param_get(_params_handles.rst_land_mspeed,&v);
+		_params.rst_land_mspeed = v;
 
 		if (_vehicle_status.is_vtol) {
 			int32_t i = 0;
@@ -1574,7 +1580,14 @@ MulticopterPositionControl::control_non_manual(float dt)
 	/* use constant descend rate when landing, ignore altitude setpoint */
 	if (_pos_sp_triplet.current.valid
 	    && _pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_LAND) {
-		_vel_sp(2) = _params.land_speed;
+
+		float altitude_above_home = -_pos(2) + _home_pos.z;
+		float vel_limit = math::gradual(altitude_above_home,
+							_params.slow_land_alt2, _params.slow_land_alt1,
+							_params.rst_land_mspeed, _params.land_speed);
+
+		_vel_sp(2) = math::min(_params.land_speed, vel_limit);
+//		_vel_sp(2) = _params.land_speed;
 		_run_alt_control = false;
 	}
 
