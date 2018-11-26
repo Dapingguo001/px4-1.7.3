@@ -1584,7 +1584,7 @@ MulticopterPositionControl::control_non_manual(float dt)
 		float altitude_above_home = -_pos(2) + _home_pos.z;
 		float vel_limit = math::gradual(altitude_above_home,
 							_params.slow_land_alt2, _params.slow_land_alt1,
-							_params.rst_land_mspeed, _params.land_speed);
+							0.4f, _params.land_speed);
 
 		_vel_sp(2) = math::min(_params.land_speed, vel_limit);
 //		_vel_sp(2) = _params.land_speed;
