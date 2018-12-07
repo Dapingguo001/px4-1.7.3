@@ -521,6 +521,7 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 	_takeoff_supervise.send_message_number = 0;
 	_takeoff_supervise.mavlink_home_alt = _home.alt;
 	_takeoff_supervise.mavlink_cmd_7 = cmd_mavlink.param7 + _home.alt;
+	_takeoff_supervise.vehicle_command = cmd_mavlink.command;
 	orb_publish(ORB_ID(rst_takeoff_supervise), _takeoff_supervise_pub, &_takeoff_supervise);
 }
 

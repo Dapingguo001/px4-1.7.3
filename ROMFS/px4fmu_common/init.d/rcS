@@ -1052,3 +1052,5 @@ unset TUNE_ERR
 mavlink boot_complete
 
 swarm_link start
+
+trajectory_control start

@@ -349,6 +349,7 @@ private:
 		uint8_t error_type;
 		uint8_t task_count;
 		bool whether_record_msg;
+		uint16_t vehicle_command;
 	};
 
 	enum new_task_type_e{

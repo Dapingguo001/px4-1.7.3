@@ -861,6 +861,7 @@ Commander::handle_command(vehicle_status_s *status_local, const safety_s *safety
 					reset_posvel_validity(global_pos, local_pos, changed);
 					/* OFFBOARD */
 					main_ret = main_state_transition(status_local, commander_state_s::MAIN_STATE_OFFBOARD, main_state_prev, &status_flags, &internal_state);
+					::printf("yuwenbin.....test.......handle...command.....offboard\n");
 				}
 
 			} else {

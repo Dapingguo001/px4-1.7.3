@@ -390,6 +390,7 @@ Navigator::task_main()
 				_insert_syn_task_debug.task_type = _insert_task_debug_msg.task_type;
 				_insert_syn_task_debug.error_type = _insert_task_debug_msg.error_type;
 				_insert_syn_task_debug.task_count = _insert_task_debug_msg.task_count;
+				_insert_syn_task_debug.vehicle_command = _insert_task_debug_msg.vehicle_command;
 				orb_publish(ORB_ID(rst_insert_global_syn_task_debug), 
 							_insert_global_syn_task_debug_pub, &_insert_syn_task_debug);
 			}
@@ -803,6 +804,7 @@ Navigator::rst_swarm_link_global_syn_task_scheduler(vehicle_command_s cmd, vehic
 
 //	::printf("yuwenbin.......................global_syn_time..%lld\n",global_syn_time);
 
+	global_syn_time = 1;//
 	//任务获取/插入
 	if(global_syn_time != 0)
 	{
@@ -940,10 +942,8 @@ Navigator::task_insert(vehicle_command_s cmd, vehicle_status_s vstatus, uint64_t
 					{
 						int64_t start_task_time_interval = global_syn_task->cmd_start_time - global_syn_time;
 
-						if(start_task_time_interval > 0 && start_task_time_interval < 60000)//判断任务延迟时间合理范围内
+						if(start_task_time_interval > -60000 && start_task_time_interval < 60000)//判断任务延迟时间合理范围内
 						{
-
-
 							new_task_type = deferred_task;
 							new_task_error_type = no_error;
 							::printf("yuwenbin....test...navigation...1\n");
@@ -1058,6 +1058,7 @@ Navigator::task_insert(vehicle_command_s cmd, vehicle_status_s vstatus, uint64_t
 		insert_task_debug_msg->error_type = new_task_error_type;
 		insert_task_debug_msg->task_count = *task_count;
 		insert_task_debug_msg->whether_record_msg = true;
+		insert_task_debug_msg->vehicle_command = cmd.command;
 
 //		::printf("yuwenbin...test....task..number....%d\n",global_syn_task->status.nav_state);
 //		::printf("yuwenbin...test....start_task_time_interval....%lld\n",insert_task_debug_msg->start_task_time_interval);
