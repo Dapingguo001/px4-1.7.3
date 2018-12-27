@@ -21,6 +21,9 @@
 #include <uORB/topics/vehicle_gps_position.h>
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/position_setpoint_triplet.h>
+#include <uORB/topics/parameter_update.h>
+
+#include <systemlib/mavlink_log.h>
 
 
 #include "trajectory_control.h"
@@ -42,6 +45,8 @@ TrajectoryControl::TrajectoryControl():
 	memset(&_sp_man, 0, sizeof(_sp_man));
 	memset(&_offboard_control_mode, 0, sizeof(_offboard_control_mode));
 	memset(&_gps_pos, 0, sizeof(_gps_pos));
+	memset(&_pos_sp_triplet, 0, sizeof(_pos_sp_triplet));
+	memset(&_home_pos, 0, sizeof(_home_pos));
 }
 
 TrajectoryControl::~TrajectoryControl()
@@ -75,6 +80,9 @@ TrajectoryControl::task_main()
 	//publish 消息
 	_vehicle_command_pub = orb_advertise(ORB_ID(vehicle_command), &_vehicle_command);
 	_offboard_control_mode_pub = orb_advertise(ORB_ID(offboard_control_mode), &_offboard_control_mode);
+	_pos_sp_triplet_pub = orb_advertise(ORB_ID(position_setpoint_triplet), &_pos_sp_triplet);
+	_home_sub = orb_subscribe(ORB_ID(home_position));
+
 	//subscribe 消息
 	_control_mode_sub = orb_subscribe(ORB_ID(vehicle_control_mode));
 	_sp_man_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
@@ -105,9 +113,14 @@ TrajectoryControl::task_main()
         orb_check(_global_pos_sub, &updated);
         if (updated) {
 			orb_copy(ORB_ID(vehicle_global_position), _global_pos_sub, &_global_pos);
-        }				
+        }	
 
-		if(_gps_pos.fix_type > 3 && hrt_absolute_time() < _gps_pos.timestamp + 1 * 1000 *1000)
+		orb_check(_home_sub, &updated);
+        if (updated) {
+			orb_copy(ORB_ID(home_position), _home_sub, &_home_pos);
+        }			
+
+		if(_gps_pos.fix_type > 2 && hrt_absolute_time() < _gps_pos.timestamp + 1 * 1000 *1000)
 		{
 			_gps_valid = true;
 		}
@@ -123,7 +136,6 @@ TrajectoryControl::task_main()
     	if(_sp_man.aux1 >  0.8f){
        		_start_circle_control = true;
 			//初始化环形命令
-			circle_init(_circle_trajectory_command_bag);
     	}
 
 		//任务开始，开启offboard模式
@@ -131,18 +143,19 @@ TrajectoryControl::task_main()
 		{
 			send_vehicle_command(true);//true :设置offboard模式  ； false:设置loiter模式
 			send_offboard_control_mode();
+			circle_init(&_circle_trajectory_command_bag);
 		}
 
 		//判断任务是否开启，开启后开始执行任务
-		if(_start_circle_control && _control_mode.flag_control_offboard_enabled && _gps_valid)
+		if(_start_circle_control && _control_mode.flag_control_offboard_enabled && _gps_valid && !_circle_trajectory_command_bag.task_complete)
 		{
 			_circle_control_command_start_success = true;
-
-			send_offboard_control_mode();
+			do_circle(&_circle_trajectory_command_bag);
+			tragectory_publish(&_circle_trajectory_command_bag);
 		}
 
 		//任务执行结束后，gps有效，切换至loiter模式
-		if(_circle_control_command_start_success && !_start_circle_control)
+		if(_circle_control_command_start_success && (!_start_circle_control || _circle_trajectory_command_bag.task_complete))
 		{
 			if(!_control_mode.flag_control_auto_enabled)
 			{
@@ -264,149 +277,225 @@ TrajectoryControl::send_offboard_control_mode()
 }
 
 void
-TrajectoryControl::do_circle(circle_trajectory_command_bag   cir_tra_com_bag)
+TrajectoryControl::do_circle(circle_trajectory_command_bag   *cir_tra_com_bag)
 {
 	struct map_projection_reference_s ref_pos;
 	//计算三维环形轨道位置转换矩阵
-	float level_2D_position[3];
-	float level_3D_position_NEU[3]; 
+	float level_2D_position[3]; 
+	float level_3D_position_NEU[3];
 	double level_3D_position_LLH[3];
-	static float theta_delta;
-	static bool calculate_cos_angle_dec = true;
-	float dt = (hrt_absolute_time() - _last_time_stamp)/(1 * 1000 * 1000);
+	static float theta_delta = 0.0f;
+	dt = (hrt_absolute_time() - _last_time_stamp)/(1000000.0f);
 
-	level_2D_position[0] = cir_tra_com_bag.circle_R * cosf(cir_tra_com_bag.initial_theta + theta_delta);
-	level_2D_position[1] = cir_tra_com_bag.circle_R * sinf(cir_tra_com_bag.initial_theta + theta_delta);
+	level_2D_position[0] = cir_tra_com_bag->circle_R * cosf(cir_tra_com_bag->initial_theta + theta_delta);
+	level_2D_position[1] = cir_tra_com_bag->circle_R * sinf(cir_tra_com_bag->initial_theta + theta_delta);
 	level_2D_position[2] = 0;
 
+		
 	//水平位置转3D位置
-	level_3D_position_NEU[0] = cir_tra_com_bag.circle_3d_tranfer_matrix[0][0] * level_2D_position[0] + cir_tra_com_bag.circle_3d_tranfer_matrix[0][1] * level_2D_position[1]
-						   		+ cir_tra_com_bag.circle_3d_tranfer_matrix[0][2] * level_2D_position[2];
+	level_3D_position_NEU[0] = cir_tra_com_bag->circle_3d_tranfer_matrix[0][0] * level_2D_position[0] + cir_tra_com_bag->circle_3d_tranfer_matrix[0][1] * level_2D_position[1]
+						   		+ cir_tra_com_bag->circle_3d_tranfer_matrix[0][2] * level_2D_position[2];
 
-	level_3D_position_NEU[1] = cir_tra_com_bag.circle_3d_tranfer_matrix[1][0] * level_2D_position[0] + cir_tra_com_bag.circle_3d_tranfer_matrix[1][1] * level_2D_position[1]
-						   		+ cir_tra_com_bag.circle_3d_tranfer_matrix[1][2] * level_2D_position[2];
+	level_3D_position_NEU[1] = cir_tra_com_bag->circle_3d_tranfer_matrix[1][0] * level_2D_position[0] + cir_tra_com_bag->circle_3d_tranfer_matrix[1][1] * level_2D_position[1]
+						   		+ cir_tra_com_bag->circle_3d_tranfer_matrix[1][2] * level_2D_position[2];
 
-	level_3D_position_NEU[2] = cir_tra_com_bag.circle_3d_tranfer_matrix[2][0] * level_2D_position[0] + cir_tra_com_bag.circle_3d_tranfer_matrix[2][1] * level_2D_position[1]
-						   		+ cir_tra_com_bag.circle_3d_tranfer_matrix[2][2] * level_2D_position[2];
+	level_3D_position_NEU[2] = cir_tra_com_bag->circle_3d_tranfer_matrix[2][0] * level_2D_position[0] + cir_tra_com_bag->circle_3d_tranfer_matrix[2][1] * level_2D_position[1]
+						   		+ cir_tra_com_bag->circle_3d_tranfer_matrix[2][2] * level_2D_position[2];
 
-	ref_pos.lat_rad = cir_tra_com_bag.center_of_circle_lat;
-	ref_pos.lon_rad = cir_tra_com_bag.center_of_circle_lon;
+	ref_pos.lat_rad = cir_tra_com_bag->center_of_circle_lat / 180 * M_PI;
+	ref_pos.lon_rad = cir_tra_com_bag->center_of_circle_lon / 180 * M_PI;
 	map_projection_reproject(&ref_pos, level_3D_position_NEU[0], level_3D_position_NEU[1], 
-								&level_3D_position_LLH[0], &level_3D_position_LLH[1]);
-	level_3D_position_LLH[2] = level_3D_position_NEU[2] + cir_tra_com_bag.center_of_circle_hgt;
+										&level_3D_position_LLH[0], &level_3D_position_LLH[1]);
 
+	ref_pos.lat_rad = _home_pos.lat / 180 * M_PI;
+	ref_pos.lon_rad = _home_pos.lon / 180 * M_PI;
+
+	map_projection_project(&ref_pos, level_3D_position_LLH[0], level_3D_position_LLH[1], 
+							&cir_tra_com_bag->level_3D_position_NEU[0], &cir_tra_com_bag->level_3D_position_NEU[1]);
+
+	mavlink_log_info(&_mavlink_log_pub,"level_3D_position_NEU[0].......%.4f\n",(double)cir_tra_com_bag->level_3D_position_NEU[0]);
+	
+	cir_tra_com_bag->level_3D_position_NEU[2] = level_3D_position_NEU[2] + cir_tra_com_bag->center_of_circle_hgt - _home_pos.alt;
+	
 	//计算加减速;
-	if(calculate_cos_angle_dec)
+	if(_calculate_cos_angle_dec)
 	{
-		_cos_angle_dec = (cir_tra_com_bag.start_angle_vel * cir_tra_com_bag.start_angle_vel - 
-				cir_tra_com_bag.end_angle_vel * cir_tra_com_bag.end_angle_vel)/(cir_tra_com_bag.max_angle_acc);
+		_cos_angle_dec = (cir_tra_com_bag->angle_vel * cir_tra_com_bag->angle_vel - 
+				cir_tra_com_bag->end_angle_vel * cir_tra_com_bag->end_angle_vel)/(2 * cir_tra_com_bag->max_angle_acc);
 	}
 
-	if((cir_tra_com_bag.angle_sum_accomplish - theta_delta) > (_cos_angle_dec + 2/180*(float)M_PI))
+	if((cir_tra_com_bag->set_angle_sum - theta_delta) > (_cos_angle_dec + 2.0f/180*(float)M_PI))
 	{
-		cir_tra_com_bag.angle_vel = cir_tra_com_bag.angle_vel + cir_tra_com_bag.max_angle_acc * dt;  //初始加速阶段
+		cir_tra_com_bag->angle_vel = cir_tra_com_bag->angle_vel + cir_tra_com_bag->max_angle_acc * dt;  //初始加速阶段
 	}
 	else
 	{
-		calculate_cos_angle_dec = false;
-		if (cir_tra_com_bag.angle_vel > cir_tra_com_bag.end_angle_vel)
+		_calculate_cos_angle_dec = false;
+		if (cir_tra_com_bag->angle_vel > cir_tra_com_bag->end_angle_vel)
 		{
-			cir_tra_com_bag.angle_vel = cir_tra_com_bag.angle_vel - cir_tra_com_bag.max_angle_acc * dt;  //终止减速阶段
+			cir_tra_com_bag->angle_vel = cir_tra_com_bag->angle_vel - cir_tra_com_bag->max_angle_acc * dt;  //终止减速阶段
 		}
-		if (cir_tra_com_bag.angle_vel < 1/180*(float)M_PI)
+		if (cir_tra_com_bag->angle_vel < 1.0f/180*(float)M_PI)
 		{
-			cir_tra_com_bag.angle_vel = 1/180*(float)M_PI;
+			cir_tra_com_bag->angle_vel = 1.0f/180*(float)M_PI;
 		}        
 	}
 
-	if (cir_tra_com_bag.angle_vel >  cir_tra_com_bag.set_angle_vel)
+	if (cir_tra_com_bag->angle_vel >  cir_tra_com_bag->set_angle_vel)
 	{
-		cir_tra_com_bag.angle_vel = _last_angle_vel;
+		cir_tra_com_bag->angle_vel = _last_angle_vel;
 	}
 
-	theta_delta = theta_delta + cir_tra_com_bag.angle_vel * dt;
+	theta_delta = theta_delta + cir_tra_com_bag->angle_vel * dt;
 
-	_last_angle_vel = cir_tra_com_bag.angle_vel;
+	_last_angle_vel = cir_tra_com_bag->angle_vel;
+
+	if(theta_delta > cir_tra_com_bag->set_angle_sum)
+	{
+		cir_tra_com_bag->task_complete = true;
+	}
 
 	_last_time_stamp = hrt_absolute_time();
+
 }
 
 void
-TrajectoryControl::circle_init(circle_trajectory_command_bag   cir_tra_com_bag)
+TrajectoryControl::circle_init(circle_trajectory_command_bag   *cir_tra_com_bag)
 {
+	_calculate_cos_angle_dec = true;
+	_last_time_stamp = hrt_absolute_time();
+	//初始化参数
+	cir_tra_com_bag->circle_dip_angle_north = 0.0f;
+	cir_tra_com_bag->circle_dip_angle_est = 0.0f;
+
+	cir_tra_com_bag->start_angle_vel = 0.0f;
+	cir_tra_com_bag->end_angle_vel = 0.0f;
+	cir_tra_com_bag->set_angle_vel = 5.0f/180.0f*(float)M_PI;
+	cir_tra_com_bag->set_angle_sum = 2.0f * (float)M_PI;
+
+	cir_tra_com_bag->max_angle_acc = 5.0f/180.0f*(float)M_PI;
+	cir_tra_com_bag->max_angle_vel = 20.0f/180.0f*(float)M_PI;
+
+	cir_tra_com_bag->angle_vel = cir_tra_com_bag->start_angle_vel;
+
+	cir_tra_com_bag->first_carry_out_task = true;
+	cir_tra_com_bag->task_complete = false;
+	cir_tra_com_bag->angle_sum_accomplish = 0.0f;
+
+	cir_tra_com_bag->direction_of_rotation = 1.0f;
+
 	//计算环形轨道半径
+	cir_tra_com_bag->circle_R_n = 2.0f;
+	cir_tra_com_bag->circle_R_e = 2.0f;
 	struct map_projection_reference_s ref_pos;
 	ref_pos.lat_rad = _global_pos.lat * M_DEG_TO_RAD;
 	ref_pos.lon_rad = _global_pos.lon * M_DEG_TO_RAD;
-	map_projection_project(&ref_pos,
-					       cir_tra_com_bag.center_of_circle_lat, cir_tra_com_bag.center_of_circle_lon,
-					       &cir_tra_com_bag.circle_R_n, &cir_tra_com_bag.circle_R_e);
+	map_projection_reproject(&ref_pos, cir_tra_com_bag->circle_R_n, cir_tra_com_bag->circle_R_e, 
+								&cir_tra_com_bag->center_of_circle_lat, &cir_tra_com_bag->center_of_circle_lon);
+	cir_tra_com_bag->center_of_circle_hgt = _global_pos.alt;
+	
 	//计算半径					   
-	cir_tra_com_bag.circle_R = sqrt(cir_tra_com_bag.circle_R_n * cir_tra_com_bag.circle_R_n + 
-									cir_tra_com_bag.circle_R_e * cir_tra_com_bag.circle_R_e);
+	cir_tra_com_bag->circle_R = sqrt(cir_tra_com_bag->circle_R_n * cir_tra_com_bag->circle_R_n + 
+									cir_tra_com_bag->circle_R_e * cir_tra_com_bag->circle_R_e);
 
 	//计算初始角度theta
-	if(cir_tra_com_bag.circle_R_n > -0.01f && cir_tra_com_bag.circle_R_n < 0.01f)
+	if(cir_tra_com_bag->circle_R_n > -0.01f && cir_tra_com_bag->circle_R_n < 0.01f)
 	{
-		if(cir_tra_com_bag.circle_R_e > -0.01f && cir_tra_com_bag.circle_R_e < 0.01f)
+		if(cir_tra_com_bag->circle_R_e > -0.01f && cir_tra_com_bag->circle_R_e < 0.01f)
 		{
-			cir_tra_com_bag.initial_theta = 0;
+			cir_tra_com_bag->initial_theta = 0;
 		}
-		else if(cir_tra_com_bag.circle_R_e < 0)
+		else if(cir_tra_com_bag->circle_R_e < 0)
 		{
-			cir_tra_com_bag.initial_theta = (float)M_PI * 3/2;
+			cir_tra_com_bag->initial_theta = (float)M_PI * 3/2;
 		}
 		else
 		{
-			cir_tra_com_bag.initial_theta = (float)M_PI/2;
+			cir_tra_com_bag->initial_theta = (float)M_PI/2;
 		}
 	}
-	else if(cir_tra_com_bag.circle_R_n > 0)
+	else if(cir_tra_com_bag->circle_R_n > 0)
 	{
-		if(cir_tra_com_bag.circle_R_e > -0.01f && cir_tra_com_bag.circle_R_e < 0.01f)
+		if(cir_tra_com_bag->circle_R_e > -0.01f && cir_tra_com_bag->circle_R_e < 0.01f)
 		{
-			cir_tra_com_bag.initial_theta = 0;
+			cir_tra_com_bag->initial_theta = 0;
 		}
-		else if(cir_tra_com_bag.circle_R_e < 0)
+		else if(cir_tra_com_bag->circle_R_e < 0)
 		{
-			cir_tra_com_bag.initial_theta = atanf(cir_tra_com_bag.circle_R_n/cir_tra_com_bag.circle_R_e) + 2.0f * (float)M_PI;
+			cir_tra_com_bag->initial_theta = atanf(cir_tra_com_bag->circle_R_n/cir_tra_com_bag->circle_R_e) + 2.0f * (float)M_PI;
 		}
 		else
 		{
-			cir_tra_com_bag.initial_theta = atanf(cir_tra_com_bag.circle_R_n/cir_tra_com_bag.circle_R_e);
+			cir_tra_com_bag->initial_theta = atanf(cir_tra_com_bag->circle_R_n/cir_tra_com_bag->circle_R_e);
 		}
 	}
 	else
 	{
-		if(cir_tra_com_bag.circle_R_e > -0.01f && cir_tra_com_bag.circle_R_e < 0.01f)
+		if(cir_tra_com_bag->circle_R_e > -0.01f && cir_tra_com_bag->circle_R_e < 0.01f)
 		{
-			cir_tra_com_bag.initial_theta = (float)M_PI;
+			cir_tra_com_bag->initial_theta = (float)M_PI;
 		}
 		else
 		{
-			cir_tra_com_bag.initial_theta = atanf(cir_tra_com_bag.circle_R_n/cir_tra_com_bag.circle_R_e) + (float)M_PI;
+			cir_tra_com_bag->initial_theta = atanf(cir_tra_com_bag->circle_R_n/cir_tra_com_bag->circle_R_e) + (float)M_PI;
 		}
 	}
 
-	cir_tra_com_bag.circle_3d_tranfer_matrix[0][0] = cosf(cir_tra_com_bag.circle_dip_angle_est);
-	cir_tra_com_bag.circle_3d_tranfer_matrix[0][1] = sinf(cir_tra_com_bag.circle_dip_angle_north) * sinf(cir_tra_com_bag.circle_dip_angle_est);
-	cir_tra_com_bag.circle_3d_tranfer_matrix[0][2] = -cosf(cir_tra_com_bag.circle_dip_angle_north)*sinf(cir_tra_com_bag.circle_dip_angle_est);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[0][0] = cosf(cir_tra_com_bag->circle_dip_angle_est);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[0][1] = sinf(cir_tra_com_bag->circle_dip_angle_north) * sinf(cir_tra_com_bag->circle_dip_angle_est);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[0][2] = -cosf(cir_tra_com_bag->circle_dip_angle_north)*sinf(cir_tra_com_bag->circle_dip_angle_est);
 	
-	cir_tra_com_bag.circle_3d_tranfer_matrix[1][0] = 0.0f;
-	cir_tra_com_bag.circle_3d_tranfer_matrix[1][1] = cosf(cir_tra_com_bag.circle_dip_angle_north);
-	cir_tra_com_bag.circle_3d_tranfer_matrix[1][2] = sinf(cir_tra_com_bag.circle_dip_angle_north);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[1][0] = 0.0f;
+	cir_tra_com_bag->circle_3d_tranfer_matrix[1][1] = cosf(cir_tra_com_bag->circle_dip_angle_north);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[1][2] = sinf(cir_tra_com_bag->circle_dip_angle_north);
 
-	cir_tra_com_bag.circle_3d_tranfer_matrix[2][0] = sinf(cir_tra_com_bag.circle_dip_angle_est);
-	cir_tra_com_bag.circle_3d_tranfer_matrix[2][1] = -sinf(cir_tra_com_bag.circle_dip_angle_north)*cosf(cir_tra_com_bag.circle_dip_angle_est);
-	cir_tra_com_bag.circle_3d_tranfer_matrix[2][2] = cosf(cir_tra_com_bag.circle_dip_angle_north)*cosf(cir_tra_com_bag.circle_dip_angle_est);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[2][0] = sinf(cir_tra_com_bag->circle_dip_angle_est);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[2][1] = -sinf(cir_tra_com_bag->circle_dip_angle_north)*cosf(cir_tra_com_bag->circle_dip_angle_est);
+	cir_tra_com_bag->circle_3d_tranfer_matrix[2][2] = cosf(cir_tra_com_bag->circle_dip_angle_north)*cosf(cir_tra_com_bag->circle_dip_angle_est);
 
-	cir_tra_com_bag.max_angle_acc = (float)10/180*(float)M_PI;
+	//最大角加速度
+	param_get(param_find("MPC_XY_VEL_MAX"), &cir_tra_com_bag->max_linear_vel);
+	param_get(param_find("MPC_ACC_HOR_MAX"), &cir_tra_com_bag->max_linear_acc);
+
+	//计算动力学约束
+	cir_tra_com_bag->max_circle_R = cir_tra_com_bag->max_linear_vel / cir_tra_com_bag->max_angle_vel;
+	if (cir_tra_com_bag->max_circle_R > cir_tra_com_bag->max_linear_acc / cir_tra_com_bag->max_angle_acc)
+	{
+		cir_tra_com_bag->max_circle_R = cir_tra_com_bag->max_linear_acc / cir_tra_com_bag->max_angle_acc;
+	}
+
+	if (cir_tra_com_bag->circle_R > cir_tra_com_bag->max_circle_R)
+	{
+		cir_tra_com_bag->circle_R_n = cir_tra_com_bag->circle_R_n * (cir_tra_com_bag->max_circle_R/cir_tra_com_bag->circle_R);
+		cir_tra_com_bag->circle_R_e = cir_tra_com_bag->circle_R_e * (cir_tra_com_bag->max_circle_R/cir_tra_com_bag->circle_R);
+		cir_tra_com_bag->circle_R = cir_tra_com_bag->max_circle_R;
+	}
+
+	
+
 }
 
 void
-TrajectoryControl::tragectory_publish(circle_trajectory_command_bag   cir_tra_com_bag)
+TrajectoryControl::tragectory_publish(circle_trajectory_command_bag   *cir_tra_com_bag)
 {
-	
+	struct position_setpoint_triplet_s pos_sp_triplet = {};
+
+	send_offboard_control_mode();
+
+	pos_sp_triplet.timestamp = hrt_absolute_time();
+	pos_sp_triplet.previous.valid = false;
+	pos_sp_triplet.next.valid = false;
+	pos_sp_triplet.current.valid = true;
+
+	pos_sp_triplet.current.type = position_setpoint_s::SETPOINT_TYPE_LOITER;
+
+	pos_sp_triplet.current.position_valid = true;
+	pos_sp_triplet.current.x = cir_tra_com_bag->level_3D_position_NEU[0];
+	pos_sp_triplet.current.y = cir_tra_com_bag->level_3D_position_NEU[1];
+	pos_sp_triplet.current.z = cir_tra_com_bag->level_3D_position_NEU[2];
+
+	orb_publish(ORB_ID(position_setpoint_triplet), _pos_sp_triplet_pub, &pos_sp_triplet);
+
 }
 
 int trajectory_control_main(int argc, char *argv[])
